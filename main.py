@@ -9,7 +9,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import defaultdict
 from datetime import datetime
 from github import Github
-import socket
 import os
 
 # 随机获取User-Agent
@@ -122,43 +121,54 @@ def parse_channels_and_sources(ip, file):
             time.sleep(random.uniform(1, 3))  # 加入随机延迟，防止频繁请求被封IP或拒绝访问
     print(f"无法从 {url} 获取数据，请稍后重试或检查网络连接。")
 
-# 过滤iptv
-def filter_and_modify_sources(sources, file_path):
-    """
-    过滤和修改源，并返回符合关键字的频道信息。
-    如果频道名称包含CCTV，则删除所有汉字，只保留字母和数字。
-    """
-    
-    name_dict = {
-        'HD': '', '-': '', 'IPTV': '', '[': '', ']': '', '超清': '', '高清': '', '标清': '', '中文国际': '', 'BRTV': '北京', 
-        '北京北京': '北京',' ':'','北京淘':'','⁺':"+" 
-    }
-    keywords = ["卫视", "CCTV", "凤凰", "解密", "星影", "光影", "淘娱乐", "淘剧场", "淘电影", "军旅剧场", "古装剧场", "城市剧场",
-                "幸福剧场", "武侠剧场", "热播剧场", "动作影院", "喜剧影院", "家庭影院", "每日影院", "经典电影", "CHC", "CBN", "爱"]  
-    no_keywords = ["4k", "奥林匹克", "教育", "精彩"]
-    unique_urls = set()
-    filtered_sources = []
+# 过滤iptv 
+def filter_and_modify_sources(sources):  
+    """  
+    过滤和修改源，并返回符合关键字的频道信息。  
 
-    for name, url, speed in sources:
-        # 将频道名称转换为小写以进行不区分大小写的比较
-        lower_name = name.lower()
-        
-        if not any(no_keyword in lower_name for no_keyword in no_keywords):
-            for key, value in name_dict.items():
-                name = name.replace(key, value)
-            
-            # 如果频道名称中包含 "CCTV"，只保留字母和数字
-            if "CCTV" in name:
-                # 使用正则表达式移除所有汉字，只保留字母和数字
-                name = re.sub(r'[^\w]', '', name)  # \w 匹配字母、数字和下划线
-            
-            # 确保频道名称符合关键字并且直播源不重复
+    :param sources: 一个列表，包含元组(name, url, speed)，分别代表频道名称、URL和速度  
+    :return: 过滤并修改后的源列表  
+    """  
+      
+    # 定义一个字典，用于替换频道名称中的特定字符串  
+    name_dict = {  
+        'HD': '', '-': '', 'IPTV': '', '[': '', ']': '', '超清': '', '高清': '', '标清': '',   
+        '中文国际': '', 'BRTV': '北京', '北京北京': '北京', ' ': '', '北京淘': '', '⁺': "+"  
+    }  
+      
+    # 定义一组关键字，用于筛选包含这些关键字的频道  
+    keywords = [  
+        "卫视", "CCTV", "凤凰",  "淘娱乐", "淘剧场", "淘电影", "剧场",   
+        "影院", "电影", "CHC", "CBN", "爱"  
+    ]  
+      
+    # 定义一组不需要的关键字，如果频道名称包含这些关键字，则会被排除  
+    no_keywords = ["4k", "奥林匹克", "教育", "精彩"]  
+    unique_urls = set()  
+    filtered_sources = []  
+      
+    for name, url, speed in sources:  
+        lower_name = name.lower()  
+          
+        # 如果频道名称不包含任何不需要的关键字  
+        if not any(no_keyword in lower_name for no_keyword in no_keywords):  
+            # 替换频道名称中的特定字符串  
+            for key, value in name_dict.items():  
+                name = name.replace(key, value)  
+              
+            # 如果频道名称中包含"CCTV"，则只保留字母和数字  
+            if "CCTV" in name:  
+                name = re.sub(r'[^\w]', '', name)  
+              
+            # 如果频道名称包含任何关键字，并且该URL尚未被添加到唯一URL集合中  
             if any(keyword in name for keyword in keywords) and url not in unique_urls:  
-                unique_urls.add(url)
-                filtered_sources.append((name, url, speed))
-    
-    return filtered_sources
-
+                # 将URL添加到唯一URL集合中  
+                unique_urls.add(url)  
+                # 将修改后的源添加到过滤后的源列表中  
+                filtered_sources.append((name, url, speed))  
+      
+    # 返回过滤并修改后的源列表  
+    return filtered_sources  
 
 # 读取IPTV文件
 def read_itv_file(file_path):
@@ -237,64 +247,75 @@ def measure_download_speed_parallel(channels, max_threads=10):
     return results
 
 # 根据分类和排序规则对源进行分类和排序，并写入文件
-def classify_and_sort_sources(sources):
-    """
-    根据分类和排序规则对源进行分类和排序，并写入文件
-    """
-    categories = {
-        "央视频道": ["CCTV"],
-        "卫视频道": ["卫视","凤凰"],
-        "影视剧场": [
-            "解密", "星影", "光影","爱","淘娱乐", "淘剧场","淘电影", "电影","影院","剧场",
-            "娱乐"   
-        ]
-    }
-    
-    yingshijuchang_order = [
-        "解密", "星影", "光影","爱","淘娱乐", "淘剧场","淘电影", "电影","影院","剧场",
-        "娱乐" 
-    ]
-
-    def channel_key(source):
-        name, _, speed = source
-        if "CCTV" in name:
-            match = re.search(r'\d+', name)
-            if match:
-                return (int(match.group()), name, -speed)
-            else:
-                return (float('inf'), name, -speed)
-        else:
-            return (name, -speed)
-    
-    def yingshijuchang_key(source):
-        name, _, speed = source
-        for i, category in enumerate(yingshijuchang_order):
-            if category in name:
-                return (i, -speed)
-        return (len(yingshijuchang_order), -speed)
-
-    classified_sources = {category: [] for category in categories}
-
-    for name, url, speed in sources:
-        for category, channels in categories.items():
-            if any(channel in name for channel in channels):
-                classified_sources[category].append((name, url, speed))
-                break
-        # else:
-        #     classified_sources["其他频道"].append((name, url, speed))
-
-    with open("itvlist.txt", "w", encoding="utf-8") as f:
-        for category, channel_list in classified_sources.items():
-            if channel_list:
-                f.write(f"{category},#genre#\n")
-                if category == "影视剧场":
-                    channel_list.sort(key=yingshijuchang_key)
-                else:
-                    channel_list.sort(key=channel_key)
-                for name, url, speed in channel_list:
-                    f.write(f"{name},{url}\n")
-                f.write("\n")
-
+def classify_and_sort_sources(sources):  
+    """  
+    根据分类和排序规则对源进行分类和排序，并写入文件  
+  
+    :param sources: 一个列表，包含元组(name, url, speed)，分别代表频道名称、URL和速度  
+    """  
+    # 定义分类和排序所需的字典和列表  
+    categories = {  
+        "央视频道": ["CCTV"],  
+        "卫视频道": ["卫视", "凤凰"],  
+        "影视剧场": [  
+            "解密", "星影", "光影", "爱", "淘娱乐", "淘剧场", "淘电影", "电影", "影院", "剧场", "娱乐"  
+        ]  
+    }  
+      
+    yingshijuchang_order = [  
+        "解密", "星影", "光影", "爱", "淘娱乐", "淘剧场", "淘电影", "电影", "影院", "剧场", "娱乐"  
+    ]  
+  
+    # 定义排序函数，用于央视频道和卫视频道的排序  
+    def channel_key(source):  
+        name, _, speed = source  
+        if "CCTV" in name:  
+            # 如果名称中包含CCTV，则根据数字进行排序，否则设为无穷大，确保排在最后  
+            match = re.search(r'\d+', name)  
+            if match:  
+                return (int(match.group()), name, -speed)  
+            else:  
+                return (float('inf'), name, -speed)  
+        else:  
+            # 其他情况，直接按名称和速度的负值排序  
+            return (name, -speed)  
+      
+    # 定义排序函数，专门用于影视剧场分类的排序  
+    def yingshijuchang_key(source):  
+        name, _, speed = source  
+        for i, category in enumerate(yingshijuchang_order):  
+            if category in name:  
+                # 如果名称中包含影视剧场分类中的某个词，则按预设顺序排序  
+                return (i, -speed)  
+        # 如果不在分类中，则排在最后  
+        return (len(yingshijuchang_order), -speed)  
+  
+    # 初始化分类后的源数据字典  
+    classified_sources = {category: [] for category in categories}  
+  
+    # 对源数据进行分类  
+    for name, url, speed in sources:  
+        for category, channels in categories.items():  
+            if any(channel in name for channel in channels):  
+                classified_sources[category].append((name, url, speed))  
+                break  
+        # 如果不属于任何已定义分类，可以选择取消注释下面的代码行，将其归入"其他频道"  
+        # else:  
+        #     classified_sources["其他频道"].append((name, url, speed))  
+  
+    # 将分类并排序后的数据写入文件  
+    with open("itvlist.txt", "w", encoding="utf-8") as f:  
+        for category, channel_list in classified_sources.items():  
+            if channel_list:  
+                f.write(f"{category},#genre#\n")  # 写入分类名称和标记  
+                if category == "影视剧场":  
+                    channel_list.sort(key=yingshijuchang_key)  # 影视剧场按特定顺序排序  
+                else:  
+                    channel_list.sort(key=channel_key)  # 其他分类按默认规则排序  
+                for name, url, speed in channel_list:  
+                    f.write(f"{name},{url}\n")  # 写入频道名称和URL  
+                f.write("\n")  # 每个分类后添加空行作为分隔  
+  
 # Git
 def upload_file_to_github(token, repo_name, file_path, branch='main'):
     """
@@ -325,14 +346,15 @@ def main():
     token = os.getenv("GITHUB_TOKEN")
     sources = read_itv_file("./itvlist.txt")
     print(len(sources))
-    if len(sources) < 500:
+    if len(sources) < 2500:
         ip_addresses_beijing = make_request("北京")
-        ip_addresses = ip_addresses_beijing # + ip_addresses_tianjin + ip_addresses_liaoning
+        ip_addresses_CHC = make_request("CHC")
+        ip_addresses = ip_addresses_beijing + ip_addresses_CHC
         with open("./itv.txt", 'w', encoding='utf-8') as file:
             with ThreadPoolExecutor(max_workers=10) as executor:
                 futures = [executor.submit(parse_channels_and_sources, ip, file) for ip in ip_addresses]
     channels = read_itv_file("./itv.txt")
-    filtered_channels = filter_and_modify_sources(channels,"./itv.txt")
+    filtered_channels = filter_and_modify_sources(channels)
     channels_with_speed = measure_download_speed_parallel(filtered_channels, max_threads=10)
     sources = [(name, url, speed) for name, url, speed in channels_with_speed if speed > 0.4]
     classify_and_sort_sources(sources)
