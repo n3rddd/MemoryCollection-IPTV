@@ -346,7 +346,7 @@ def main():
     token = os.getenv("GITHUB_TOKEN")
     sources = read_itv_file("./itvlist.txt")
     print(len(sources))
-    if len(sources) < 2500:
+    if len(sources) < 500:
         ip_addresses_beijing = make_request("北京")
         ip_addresses_CHC = make_request("CHC")
         ip_addresses = ip_addresses_beijing + ip_addresses_CHC
