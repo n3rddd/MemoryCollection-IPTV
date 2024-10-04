@@ -5,6 +5,24 @@
     "wallpaper": "https://tuapi.eees.cc/api.php?category=fengjing&type=302",
     "sites": [
         {
+            "key": "新6V",
+            "name": "新6V┃磁力",
+            "type": 3,
+            "api": "csp_Xb6v",
+            "searchable": 1,
+            "changeable": 0,
+            "jar": "https://tv.菜妮丝.top/jar/fm0729.jar;md5;180e5301bc663f0f47928de94f1a8c94"
+        },
+        {
+            "key": "360影视",
+            "name": "360┃解析",
+            "type": 3,
+            "api": "csp_SP360",
+            "searchable": 1,
+            "changeable": 1,
+            "jar": "https://tv.菜妮丝.top/jar/xyq0729.jar;md5;705ba6e23c4384c37a11dd904727520b"
+        },
+        {
             "key": "豆瓣",
             "name": "豆瓣┃推荐",
             "type": 3,
@@ -24,47 +42,6 @@
             "ext": {
                 "token": "影視天下第一",
                 "filter": "https://tv.菜妮丝.top/json/wogg.json"
-            },
-            "jar": "https://tv.菜妮丝.top/jar/fm0729.jar;md5;180e5301bc663f0f47928de94f1a8c94"
-        },
-        {
-            "key": "荐片",
-            "name": "荐片┃P2P",
-            "type": 3,
-            "api": "csp_Jianpian",
-            "searchable": 1,
-            "changeable": 1,
-            "ext": "https://tv.菜妮丝.top/json/jianpian.json",
-            "jar": "https://tv.菜妮丝.top/jar/fm0729.jar;md5;180e5301bc663f0f47928de94f1a8c94"
-        },
-        {
-            "key": "短剧天堂",
-            "name": "🌈上头┃短剧",
-            "type": 3,
-            "api": "csp_XBPQ",
-            "searchable": 1,
-            "changeable": 1,
-            "ext": "https://tv.菜妮丝.top/json/XBPQ/短剧天堂.json",
-            "jar": "https://tv.菜妮丝.top/jar/XBPQ.jar;md5;c156ba7ce636a59c744e9a72bd5a8423"
-        },
-        {
-            "key": "新6V",
-            "name": "新6V┃磁力",
-            "type": 3,
-            "api": "csp_Xb6v",
-            "searchable": 1,
-            "changeable": 0,
-            "jar": "https://tv.菜妮丝.top/jar/fm0729.jar;md5;180e5301bc663f0f47928de94f1a8c94"
-        },
-        {
-            "key": "Kanqiu",
-            "name": "🏀看球┃看球",
-            "type": 3,
-            "api": "csp_Kanqiu",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "list"
             },
             "jar": "https://tv.菜妮丝.top/jar/fm0729.jar;md5;180e5301bc663f0f47928de94f1a8c94"
         },
@@ -104,15 +81,7 @@
             },
             "jar": "https://tv.菜妮丝.top/jar/fm0729.jar;md5;180e5301bc663f0f47928de94f1a8c94"
         },
-        {
-            "key": "Kugou",
-            "name": "🎵酷狗┃音乐",
-            "type": 3,
-            "api": "csp_Kugou",
-            "searchable": 0,
-            "changeable": 0,
-            "jar": "https://tv.菜妮丝.top/jar/fm0729.jar;md5;180e5301bc663f0f47928de94f1a8c94"
-        },
+
         {
             "key": "Local",
             "name": "本地┃文件",
@@ -186,19 +155,7 @@
             "ext": "影視天下第一$$$test2$$$test2",
             "jar": "https://tv.菜妮丝.top/jar/fm0729.jar;md5;180e5301bc663f0f47928de94f1a8c94"
         },
-        {
-            "key": "FirstAid",
-            "name": "🚑急救┃教学",
-            "type": 3,
-            "api": "csp_FirstAid",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "rect",
-                "ratio": 3.8
-            },
-            "jar": "https://tv.菜妮丝.top/jar/fm0729.jar;md5;180e5301bc663f0f47928de94f1a8c94"
-        },
+
         {
             "key": "酷看",
             "name": "酷看┃影视",
@@ -309,102 +266,6 @@
             "changeable": 1
         },
         {
-            "key": "88js",
-            "name": "⚽88┃看球",
-            "type": 3,
-            "api": "https://gitlab.com/fantaiying/ext/-/raw/main/drpy2.min.js",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "list"
-            },
-            "ext": "https://gitlab.com/fantaiying/ext/-/raw/main/88看球.js"
-        },
-        {
-            "key": "Jrsjs",
-            "name": "⚽Jrs┃球迷",
-            "type": 3,
-            "api": "https://gitlab.com/fantaiying/ext/-/raw/main/drpy2.min.js",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "list"
-            },
-            "ext": "https://gitlab.com/fantaiying/ext/-/raw/main/jrk.js"
-        },
-        {
-            "key": "企鹅xp",
-            "name": "🐧鹅鹅┃体育",
-            "type": 3,
-            "api": "csp_XPath",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "list"
-            },
-            "ext": "https://gitlab.com/fantaiying/ext/-/raw/main/企鹅直播.json"
-        },
-        {
-            "key": "酷奇",
-            "name": "🎤酷奇┃MV",
-            "type": 3,
-            "api": "https://gitlab.com/fantaiying/ext/-/raw/main/drpy2.min.js",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "rect",
-                "ratio": 1.597
-            },
-            "ext": "https://gitlab.com/fantaiying/ext/-/raw/main/酷奇MV.js"
-        },
-        {
-            "key": "MTV",
-            "name": "🎧明星┃MV",
-            "type": 3,
-            "api": "csp_Bili",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "rect",
-                "ratio": 1.597
-            },
-            "ext": "https://gitlab.com/fantaiying/ext/-/raw/main/MTV.json"
-        },
-        {
-            "key": "csp_Yj1211",
-            "name": "📽️网红┃直播",
-            "type": 3,
-            "api": "csp_Yj1211",
-            "searchable": 0,
-            "changeable": 0
-        },
-        {
-            "key": "虎牙直播js",
-            "name": "🐯虎牙┃直播",
-            "type": 3,
-            "api": "https://gitlab.com/fantaiying/ext/-/raw/main/drpy2.min.js",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "rect",
-                "ratio": 1.755
-            },
-            "ext": "https://gitlab.com/fantaiying/ext/-/raw/main/huya2.js"
-        },
-        {
-            "key": "斗鱼js",
-            "name": "🐟斗鱼┃直播",
-            "type": 3,
-            "api": "https://gitlab.com/fantaiying/ext/-/raw/main/drpy2.min.js",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "rect",
-                "ratio": 1.755
-            },
-            "ext": "https://gitlab.com/fantaiying/ext/-/raw/main/斗鱼直播.js"
-        },
-        {
             "key": "米搜",
             "name": "米搜┃云盘",
             "type": 3,
@@ -456,71 +317,6 @@
             "ext": "https://gitlab.com/fantaiying/ext/-/raw/main/biliych.json"
         },
         {
-            "key": "dr_兔小贝",
-            "name": "📚儿童┃启蒙",
-            "type": 3,
-            "api": "https://gitlab.com/fantaiying/ext/-/raw/main/drpy2.min.js",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "rect",
-                "ratio": 1.597
-            },
-            "ext": "https://gitlab.com/fantaiying/ext/-/raw/main/%E5%85%94%E5%B0%8F%E8%B4%9D.js"
-        },
-        {
-            "key": "少儿教育",
-            "name": "📚少儿┃教育",
-            "type": 3,
-            "api": "csp_Bili",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "rect",
-                "ratio": 1.597
-            },
-            "ext": "https://gitlab.com/fantaiying/ext/-/raw/main/少儿教育.json"
-        },
-        {
-            "key": "小学课堂",
-            "name": "📚小学┃课堂",
-            "type": 3,
-            "api": "csp_Bili",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "rect",
-                "ratio": 1.597
-            },
-            "ext": "https://gitlab.com/fantaiying/ext/-/raw/main/小学课堂.json"
-        },
-        {
-            "key": "初中课堂",
-            "name": "📚初中┃课堂",
-            "type": 3,
-            "api": "csp_Bili",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "rect",
-                "ratio": 1.597
-            },
-            "ext": "https://gitlab.com/fantaiying/ext/-/raw/main/初中课堂.json"
-        },
-        {
-            "key": "高中教育",
-            "name": "📚高中┃课堂",
-            "type": 3,
-            "api": "csp_Bili",
-            "searchable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "rect",
-                "ratio": 1.597
-            },
-            "ext": "https://gitlab.com/fantaiying/ext/-/raw/main/高中课堂.json"
-        },
-        {
             "key": "360影视",
             "name": "360┃解析",
             "type": 3,
@@ -553,38 +349,6 @@
             "searchable": 0,
             "changeable": 0,
             "jar": "https://tv.菜妮丝.top/jar/fm0729.jar;md5;180e5301bc663f0f47928de94f1a8c94"
-        },
-        {
-            "key": "公告",
-            "name": "——————————",
-            "type": 3,
-            "api": "csp_XPath",
-            "searchable": 0,
-            "changeable": 0
-        },
-        {
-            "key": "说明1",
-            "name": "https://菜妮丝.top",
-            "type": 3,
-            "api": "csp_XPath",
-            "searchable": 0,
-            "changeable": 0
-        },
-        {
-            "key": "说明2",
-            "name": "免费接口更新维护",
-            "type": 3,
-            "api": "csp_XPath",
-            "searchable": 0,
-            "changeable": 0
-        },
-        {
-            "key": "说明3",
-            "name": "请勿相信视频中任何广告",
-            "type": 3,
-            "api": "csp_XPath",
-            "searchable": 0,
-            "changeable": 0
         }
     ],
     "parses": [
@@ -803,6 +567,12 @@
         {
             "name": "wi6",
             "url": "./itvlist.txt",
+            "playerType": 2,
+            "timeout": 5
+        },
+        {
+            "name": "filtered_itvlist",
+            "url": "./filtered_itvlist.txt",
             "playerType": 2,
             "timeout": 5
         }

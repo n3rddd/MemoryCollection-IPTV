@@ -170,7 +170,7 @@ def filter_channels():
             for index, (url, channel_name) in enumerate(sorted_channels, start=123):
                 f.write(f"{channel_name},{url},{speed}\n")
 
-        with open('../../IPTV/filtered_out_itv.txt', 'w', encoding='utf-8') as f:
+        with open('../../../IPTV/filtered_out_itv.txt', 'w', encoding='utf-8') as f:
             for channel_name, url in filtered_out:
                 f.write(f"{channel_name},{url}\n")
         print("名称筛选和替换完成！")
@@ -309,7 +309,7 @@ def group_and_sort_channels(channels):
         overflow_groups[group_name] = overflow_list
 
     # 保存到文件
-    with open('itvlist.txt', 'w', encoding='utf-8') as file:
+    with open('../itvlist.txt', 'w', encoding='utf-8') as file:
         for group_name, channel_list in filtered_groups.items():
             file.write(f"{group_name}:\n")
             for name, url, speed in channel_list:
@@ -375,4 +375,4 @@ if __name__ == "__main__":
                     print("分组后的频道信息已保存到 itvlist.txt.")
                     token = os.getenv("GITHUB_TOKEN")
                     if token :
-                        upload_file_to_github(token, "IPTV", "itvlist.txt")
+                        upload_file_to_github(token, "IPTV", "../itvlist.txt")
