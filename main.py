@@ -1,193 +1,200 @@
-import threading
-from queue import Queue
-import time
-import random
+import requests
 from bs4 import BeautifulSoup
 import re
-import requests
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from collections import defaultdict
-from datetime import datetime
+import random
+import concurrent.futures
+import time
+import threading
+from queue import Queue
 from github import Github
+from datetime import datetime
 import os
 
-# 随机获取User-Agent
-def get_random_user_agent():
-    USER_AGENTS = [
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36",
+def get_ua():
+    user_agents = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15',
+        'Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Mobile Safari/537.36'
     ]
-    return random.choice(USER_AGENTS)
+    return random.choice(user_agents)
 
-# 模拟请求
-def make_request(region):
-    url = "http://www.foodieguide.com/iptvsearch/hoteliptv.php"
+def get_headers(base_url):
     headers = {
-        "User-Agent": get_random_user_agent(),
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "zh-CN,zh;q=0.9",
-        "Accept-Encoding": "gzip, deflate",
-        "Connection": "keep-alive",
-        "Referer": url,
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Accept-Language": "zh-CN,zh-Hans;q=0.9,zh;q=0.8,und;q=0.7",
+        "Cache-Control": "max-age=0",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "DNT": "1",
+        "Origin": base_url,
+        "User-Agent": get_ua()
     }
-    data = {
-        "saerch": region,
-        "Submit": "+",
-        "city": "HeZhou",
-        "address": "Ca94122"
-    }
-    response = requests.post(url, headers=headers, data=data, timeout=10)
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, 'html.parser')
-        ip_addresses = []
-        results = soup.find_all('div', class_='result')
-        for result in results:
-            # Check if it is temporarily inactive
-            status_div = result.find('div', style='color: crimson;')
-            if status_div and '暂时失效' in status_div.text:
-                continue  # Skip temporarily inactive entries
-            
-            # Extract IP address
-            ip_link = result.find('a', href=re.compile(r'hotellist\.html\?s=([\d\.]+:\d+)'))
-            if ip_link:
-                ip_address = re.search(r'hotellist\.html\?s=([\d\.]+:\d+)', ip_link['href']).group(1)
-                ip_addresses.append(ip_address)
-        print(ip_addresses)
-        return ip_addresses
-    else:
-        print(f"请求失败，状态码：{response.status_code}")
+    return headers
 
-# 爬取iptv
-def parse_channels_and_sources(ip, file):
-    time.sleep(random.uniform(2, 5))
-    headers = {
-        "User-Agent": get_random_user_agent(),
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "zh-CN,zh;q=0.9",
-        "Accept-Encoding": "gzip, deflate",
-        "Connection": "keep-alive",
-        "Referer": f"http://www.foodieguide.com/iptvsearch/hotellist.html?s={ip}",
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-    url = f"http://www.foodieguide.com/iptvsearch/allllist.php?s={ip}&y=false"
-    retries = 2  # 最大重试次数
-    retry_delay = 10  # 重试延迟时间（秒）
-    total_written = 0  # 记录写入的总条数
-    for _ in range(retries):
+def ip_exists(ip):
+    """检查ip是否在文件中存在"""
+    try:
+        with open('itv.txt', 'r', encoding='utf-8') as f:
+            for line in f:
+                if ip in line:
+                    return True
+    except FileNotFoundError:
+        return False  # 如果文件不存在，返回 False
+    return False
+
+def get_ip(diqu):
+    """爬取ip"""
+    base_url = "http://tonkiang.us/hoteliptv.php"
+    data = {"saerch": diqu, "Submit": "+"}
+    ip_list = set()
+    print("开始爬取ip")
+    with requests.Session() as session:
         try:
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()  
+            response = session.post(base_url, headers=get_headers(base_url), data=data)
+            if not response.ok:
+                print(f"Failed to fetch initial page: {response.status_code}")
+                return ip_list
 
-            soup = BeautifulSoup(response.text, 'html.parser')
-            results = soup.select('.result')  
+            soup = BeautifulSoup(response.content, 'html.parser')
 
-            for result in results:
-                channel_name_elem = result.find(class_='channel')
-                if channel_name_elem:
-                    div_elem = channel_name_elem.find('div', style='float: left;')
-                    if div_elem:
-                        channel_name = div_elem.get_text(strip=True).replace(" ", "")
-                    else:
-                        continue  
-                else:
-                    continue 
+            ip_list = set()
+            for link in soup.find_all('a', href=True):
+                match = re.search(r'hotellist\.html\?s=(\d+\.\d+\.\d+\.\d+:\d+)', link['href'])
+                if match:
+                    ip_list.add(match.group(1))
+            print(ip_list)
+            return ip_list
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return set()
 
-                m3u8_elem = result.find(class_='m3u8')
-                if m3u8_elem:
-                    live_source_elem = m3u8_elem.select_one('td[style="padding-left: 6px;"]')
-                    if live_source_elem:
-                        live_source = live_source_elem.get_text(strip=True).replace(" ", "")
-                    else:
-                        continue  
-                else:
-                    continue  
+def get_iptv(ip_list):
+    """爬取频道信息，并过滤掉udp"""
+    print("开始爬取频道信息")
+    all_results = []  # 用于存储所有 IP 的结果
 
-                # 写入文件（例如CSV格式）
-                file.write(f"{channel_name},{live_source},0\n")
-                total_written += 1 
-            print(f"处理IP地址: {ip}，共计{total_written}条直播源")
-            return total_written 
+    for ip in ip_list:
+        if ip_exists(ip):
+            print(f"IP {ip} 已存在，跳过爬取。")
+            continue  # 如果 IP 存在，则跳过
+
+        base_url = f"http://tonkiang.us/allllist.php?s={ip}&c=false"
+        headers = {
+            "User-Agent": get_ua(),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "zh-CN,zh;q=0.9",
+            "Accept-Encoding": "gzip, deflate",
+            "Connection": "keep-alive",
+            "Referer": f"http://tonkiang.us/hotellist.html?s={ip}&Submit=+",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        print(f"爬取：{ip}")
+        try:
+            response = requests.get(base_url, headers=headers)
+            response.raise_for_status()  # 检查请求是否成功
+
+            soup = BeautifulSoup(response.content, 'html.parser')
+            results = []
+            seen_urls = set()  # 用于存储已存在的 URL
+
+            for result in soup.find_all("div", class_="result"):
+                channel_div = result.find("div", style="float: left;")
+                if channel_div:  # 确保找到 channel_div
+                    channel_name = channel_div.text.strip()
+                    url_tag = result.find("td", style="padding-left: 6px;")
+
+                    if url_tag:
+                        url = url_tag.text.strip()
+
+                        # 过滤掉包含 'udp' 的 URL
+                        if 'udp' not in url and url not in seen_urls:
+                            seen_urls.add(url)
+                            results.append((channel_name, url))
+
+            # 输出当前 IP 的结果，并保存到文件
+            with open('itv.txt', 'a', encoding='utf-8') as f:
+                for channel_name, url in results:
+                    line = f"{channel_name},{url},0\n"
+                    f.write(line)  # 写入文件
+
+            all_results.extend(results)  # 将当前 IP 的结果添加到总结果中
 
         except requests.exceptions.RequestException as e:
-            if isinstance(e, requests.exceptions.HTTPError) and e.response.status_code == 500:
-                print(f"遇到500错误，将暂停 {retry_delay} 秒后重试...")
-                time.sleep(retry_delay)
-            else:
-                print("发生其他请求异常，将重试...")
+            print(f"无法访问: {base_url}, 错误: {e}")
 
-            time.sleep(random.uniform(1, 3))  # 加入随机延迟，防止频繁请求被封IP或拒绝访问
-    print(f"无法从 {url} 获取数据，请稍后重试或检查网络连接。")
+    return all_results  # 返回所有 IP 的结果
 
-# 过滤iptv 
-def filter_and_modify_sources(sources):  
-    """  
-    过滤和修改源，并返回符合关键字的频道信息。  
+def filter_channels():
+    """对频道名称过滤和修改"""
+    keywords = ["CCTV", "卫视", "凤凰", "影院", "剧场", "CHC", "娱乐", "淘","星影","光影","经典电影","精选"]
+    unique_channels = {}
+    filtered_out = []
 
-    :param sources: 一个列表，包含元组(name, url, speed)，分别代表频道名称、URL和速度  
-    :return: 过滤并修改后的源列表  
-    """  
-      
-    # 定义一个字典，用于替换频道名称中的特定字符串  
-    name_dict = {  
-        'HD': '', '-': '', 'IPTV': '', '[': '', ']': '', '超清': '', '高清': '', '标清': '',   
-        '中文国际': '', 'BRTV': '北京', '北京北京': '北京', ' ': '', '北京淘': '', '⁺': "+"  
-    }  
-      
-    # 定义一组关键字，用于筛选包含这些关键字的频道  
-    keywords = [  
-        "卫视", "CCTV", "凤凰",  "淘娱乐", "淘剧场", "淘电影", "剧场",   
-        "影院", "电影", "CHC", "CBN", "爱"  
-    ]  
-      
-    # 定义一组不需要的关键字，如果频道名称包含这些关键字，则会被排除  
-    no_keywords = ["4k", "奥林匹克", "教育", "精彩"]  
-    unique_urls = set()  
-    filtered_sources = []  
-      
-    for name, url, speed in sources:  
-        lower_name = name.lower()  
-          
-        # 如果频道名称不包含任何不需要的关键字  
-        if not any(no_keyword in lower_name for no_keyword in no_keywords):  
-            # 替换频道名称中的特定字符串  
-            for key, value in name_dict.items():  
-                name = name.replace(key, value)  
-              
-            # 如果频道名称中包含"CCTV"，则只保留字母和数字  
-            if "CCTV" in name:  
-                name = re.sub(r'[^\w]', '', name)  
-              
-            # 如果频道名称包含任何关键字，并且该URL尚未被添加到唯一URL集合中  
-            if any(keyword in name for keyword in keywords) and url not in unique_urls:  
-                # 将URL添加到唯一URL集合中  
-                unique_urls.add(url)  
-                # 将修改后的源添加到过滤后的源列表中  
-                filtered_sources.append((name, url, speed))  
-      
-    # 返回过滤并修改后的源列表  
-    return filtered_sources  
+    replace_keywords = {
+        'HD': '', '-': '', 'IPTV': '', '[': '', ']' : '', '超清': '', '高清': '', '标清': '',"上海东方":"",
+        '中文国际': '', 'BRTV': '北京', '北京北京': '北京', ' ': '', '北京淘': '', '⁺': '+', "R": "","4K":"","奥林匹克":"",
+        "内蒙古":"内蒙"
+    }
 
-# 读取IPTV文件
-def read_itv_file(file_path):
-    """
-    读取ITV文件并返回频道信息
-    """
+    try:
+        with open("itv.txt", 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.strip():
+                    parts = line.strip().split(',')
+                    channel_name = parts[0].strip()
+                    url = parts[1].strip()
+                    speed = parts[2].strip()
+
+                    # 对url进行关键词替换为空
+                    url = url.replace("#", "").replace(" ", "")
+
+                    for key, value in replace_keywords.items():
+                        channel_name = channel_name.replace(key, value)
+
+                    if url not in unique_channels:
+                        if any(keyword in channel_name for keyword in keywords):
+                            if "CCTV" in channel_name and channel_name != "CCTV4":
+                                channel_name = ''.join(filter(lambda x: x not in "汉字", channel_name))
+                            unique_channels[url] = channel_name
+                        else:
+                            filtered_out.append((channel_name, url))
+
+        def natural_sort_key(channel):
+            match = re.match(r"CCTV(\d+)", channel)
+            if match:
+                return (0, int(match.group(1)))
+            return (1, channel)
+
+        with open('itv.txt', 'w', encoding='utf-8') as f:
+            sorted_channels = sorted(unique_channels.items(), key=lambda item: natural_sort_key(item[1]))
+            for index, (url, channel_name) in enumerate(sorted_channels, start=123):
+                f.write(f"{channel_name},{url},{speed}\n")
+
+        with open('../../IPTV/filtered_out_itv.txt', 'w', encoding='utf-8') as f:
+            for channel_name, url in filtered_out:
+                f.write(f"{channel_name},{url}\n")
+        print("名称筛选和替换完成！")
+        return True  # 返回成功
+    except Exception as e:
+        print(f"处理失败: {e}")
+        return False  # 返回失败
+
+def read_channels(filename):
+    """读取频道信息，并根据 URL 去重"""
     channels = []
-    with open(file_path, 'r', encoding='utf-8') as file:
+    seen_urls = set()  # 用于存储已处理的 URL
+
+    with open(filename, 'r', encoding='utf-8') as file:
         for line in file:
-            if line.strip():  # 忽略空行
-                channel_info = line.strip().split(',')
-                if len(channel_info) >= 2:
-                    name, url = channel_info[0], channel_info[1]
-                    speed = float(channel_info[2]) if len(channel_info) > 2 else 0  # 如果没有速度信息，则默认为0
-                    channels.append((name, url, speed))
+            parts = line.strip().split(',')
+            name, url, speed = parts[0], parts[1], float(parts[2]) if parts[2].replace('.', '', 1).isdigit() else None
+            if url not in seen_urls:
+                channels.append((name, url, speed))
+                seen_urls.add(url)
+
     return channels
 
-# 测试下载速度
-def test_download_speed(url, test_duration=8):
+def test_download_speed(url, test_duration=5):
     """
     测试下载速度
     """
@@ -197,20 +204,20 @@ def test_download_speed(url, test_duration=8):
         response.raise_for_status()
 
         downloaded = 0
+        elapsed_time = 0  # 初始化 elapsed_time
         for chunk in response.iter_content(chunk_size=4096):
             downloaded += len(chunk)
             elapsed_time = time.time() - start_time
             if elapsed_time > test_duration:
                 break
 
-        speed = downloaded / test_duration
+        speed = downloaded / elapsed_time if elapsed_time > 0 else 0  # 防止除以零
         return speed / (1024 * 1024)  # 转换为 MB/s
 
     except requests.RequestException:
         return 0
 
-# 并行测量下载速度
-def measure_download_speed_parallel(channels, max_threads=10):
+def measure_download_speed_parallel(channels, max_threads=5):
     """
     并行测量下载速度
     """
@@ -229,7 +236,7 @@ def measure_download_speed_parallel(channels, max_threads=10):
             speed = test_download_speed(url)
             results.append((name, url, speed))
             processed_count += 1  # 增加已处理的频道数
-            if processed_count % 100 == 0:  # 每处理 100 个频道打印一次进展
+            if processed_count % (len(channels) // 20) == 0:  # 每处理 5% 的频道打印一次
                 print(f"已处理 {processed_count} 个频道")
             queue.task_done()
 
@@ -246,77 +253,80 @@ def measure_download_speed_parallel(channels, max_threads=10):
 
     return results
 
-# 根据分类和排序规则对源进行分类和排序，并写入文件
-def classify_and_sort_sources(sources):  
-    """  
-    根据分类和排序规则对源进行分类和排序，并写入文件  
-  
-    :param sources: 一个列表，包含元组(name, url, speed)，分别代表频道名称、URL和速度  
-    """  
-    # 定义分类和排序所需的字典和列表  
-    categories = {  
-        "央视频道": ["CCTV"],  
-        "卫视频道": ["卫视", "凤凰"],  
-        "影视剧场": [  
-            "解密", "星影", "光影", "爱", "淘娱乐", "淘剧场", "淘电影", "电影", "影院", "剧场", "娱乐"  
-        ]  
-    }  
-      
-    yingshijuchang_order = [  
-        "解密", "星影", "光影", "爱", "淘娱乐", "淘剧场", "淘电影", "电影", "影院", "剧场", "娱乐"  
-    ]  
-  
-    # 定义排序函数，用于央视频道和卫视频道的排序  
-    def channel_key(source):  
-        name, _, speed = source  
-        if "CCTV" in name:  
-            # 如果名称中包含CCTV，则根据数字进行排序，否则设为无穷大，确保排在最后  
-            match = re.search(r'\d+', name)  
-            if match:  
-                return (int(match.group()), name, -speed)  
-            else:  
-                return (float('inf'), name, -speed)  
-        else:  
-            # 其他情况，直接按名称和速度的负值排序  
-            return (name, -speed)  
-      
-    # 定义排序函数，专门用于影视剧场分类的排序  
-    def yingshijuchang_key(source):  
-        name, _, speed = source  
-        for i, category in enumerate(yingshijuchang_order):  
-            if category in name:  
-                # 如果名称中包含影视剧场分类中的某个词，则按预设顺序排序  
-                return (i, -speed)  
-        # 如果不在分类中，则排在最后  
-        return (len(yingshijuchang_order), -speed)  
-  
-    # 初始化分类后的源数据字典  
-    classified_sources = {category: [] for category in categories}  
-  
-    # 对源数据进行分类  
-    for name, url, speed in sources:  
-        for category, channels in categories.items():  
-            if any(channel in name for channel in channels):  
-                classified_sources[category].append((name, url, speed))  
-                break  
-        # 如果不属于任何已定义分类，可以选择取消注释下面的代码行，将其归入"其他频道"  
-        # else:  
-        #     classified_sources["其他频道"].append((name, url, speed))  
-  
-    # 将分类并排序后的数据写入文件  
-    with open("itvlist.txt", "w", encoding="utf-8") as f:  
-        for category, channel_list in classified_sources.items():  
-            if channel_list:  
-                f.write(f"{category},#genre#\n")  # 写入分类名称和标记  
-                if category == "影视剧场":  
-                    channel_list.sort(key=yingshijuchang_key)  # 影视剧场按特定顺序排序  
-                else:  
-                    channel_list.sort(key=channel_key)  # 其他分类按默认规则排序  
-                for name, url, speed in channel_list:  
-                    f.write(f"{name},{url}\n")  # 写入频道名称和URL  
-                f.write("\n")  # 每个分类后添加空行作为分隔  
-  
-# Git
+def natural_key(string):
+    """生成自然排序的键"""
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', string)]
+
+def natural_key(string):
+    """自然排序的关键函数，用于对字符串进行排序。"""
+    import re
+    return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', string)]
+
+def group_and_sort_channels(channels):
+    """根据规则分组并排序频道信息，并保存到itvlist"""
+    groups = {
+        '央视频道,#genre#': [],
+        '卫视频道,#genre#': [],
+        '其他频道,#genre#': []
+    }
+
+    for name, url, speed in channels:
+        if 'cctv' in name.lower():
+            groups['央视频道,#genre#'].append((name, url, speed))
+        elif '卫视' in name:
+            groups['卫视频道,#genre#'].append((name, url, speed))
+        else:
+            groups['其他频道,#genre#'].append((name, url, speed))
+
+    # 对每组进行排序
+    for group in groups.values():
+        group.sort(key=lambda x: (
+            natural_key(x[0]),  # 名称自然排序
+            -x[2] if x[2] is not None else float('-inf')  # 速度从高到低排序
+        ))
+
+    # 筛选相同名称的频道，只保存前8个
+    filtered_groups = {}
+    overflow_groups = {}
+
+    for group_name, channel_list in groups.items():
+        seen_names = {}
+        filtered_list = []
+        overflow_list = []
+
+        for channel in channel_list:
+            name = channel[0]
+            if name not in seen_names:
+                seen_names[name] = 0
+
+            if seen_names[name] < 8:
+                filtered_list.append(channel)
+                seen_names[name] += 1
+            else:
+                overflow_list.append(channel)
+
+        filtered_groups[group_name] = filtered_list
+        overflow_groups[group_name] = overflow_list
+
+    # 保存到文件
+    with open('itvlist.txt', 'w', encoding='utf-8') as file:
+        for group_name, channel_list in filtered_groups.items():
+            file.write(f"{group_name}:\n")
+            for name, url, speed in channel_list:
+                file.write(f"{name},{url}\n")
+            file.write("\n")  # 打印空行分隔组
+
+    # 保存超过8个的频道到新文件
+    with open('filtered_itvlist.txt', 'w', encoding='utf-8') as file:
+        for group_name, channel_list in overflow_groups.items():
+            if channel_list:  # 只写入非空组
+                file.write(f"{group_name}\n")
+                for name, url, speed in channel_list:
+                    file.write(f"{name},{url}\n")
+                file.write("\n")  # 打印空行分隔组
+
+    return groups
+
 def upload_file_to_github(token, repo_name, file_path, branch='main'):
     """
     将结果上传到 GitHub
@@ -341,26 +351,28 @@ def upload_file_to_github(token, repo_name, file_path, branch='main'):
     except Exception as e:
         print("文件上传失败:", e)
 
-# 主函数
-def main():
-    token = os.getenv("GITHUB_TOKEN")
-    sources = read_itv_file("./itvlist.txt")
-    print(len(sources))
-    if len(sources) < 500:
-        ip_addresses_beijing = make_request("北京")
-        ip_addresses_CHC = make_request("CHC")
-        ip_addresses = ip_addresses_beijing + ip_addresses_CHC
-        with open("./itv.txt", 'w', encoding='utf-8') as file:
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                futures = [executor.submit(parse_channels_and_sources, ip, file) for ip in ip_addresses]
-    channels = read_itv_file("./itv.txt")
-    filtered_channels = filter_and_modify_sources(channels)
-    channels_with_speed = measure_download_speed_parallel(filtered_channels, max_threads=10)
-    sources = [(name, url, speed) for name, url, speed in channels_with_speed if speed > 0.4]
-    classify_and_sort_sources(sources)
-    print(f"完成了对 {len(filtered_channels)} 个频道的处理和速度测量。")
-    if token :
-        upload_file_to_github(token, "IPTV", "itvlist.txt")
-
 if __name__ == "__main__":
-    main()
+
+    ip_list = set()
+    ip_list.update(get_ip("上海"))
+    ip_list.update(get_ip("北京"))
+    ip_list.update(get_ip("辽宁"))
+    if ip_list:
+        iptv_list = get_iptv(ip_list)
+        if iptv_list:
+            if filter_channels():
+                channels = read_channels('itv.txt')
+                results = measure_download_speed_parallel(channels, max_threads=5)
+                # 保存结果
+                with open('itv.txt', 'w', encoding='utf-8') as file:
+                    for name, url, speed in results:
+                        if speed > 0.01:
+                            file.write(f"{name},{url},{speed}\n")  # 保留两位小数
+                print("已经完成测速！")
+                channels = read_channels('itv.txt')
+                if channels:
+                    grouped_channels = group_and_sort_channels(channels)
+                    print("分组后的频道信息已保存到 itvlist.txt.")
+                    token = os.getenv("GITHUB_TOKEN")
+                    if token :
+                        upload_file_to_github(token, "IPTV", "itvlist.txt")
