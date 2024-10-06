@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import random
-import concurrent.futures
 import time
 import threading
 from queue import Queue
@@ -131,7 +130,7 @@ def filter_channels():
     filtered_out = []
 
     replace_keywords = {
-        'HD': '', '-': '', 'IPTV': '', '[': '', ']' : '', '超清': '', '高清': '', '标清': '',"上海东方":"",
+        'HD': '', '-': '', 'IPTV': '', '[': '', ']' : '', '超清': '', '高清': '', '标清': '',"上海东方":"东方",
         '中文国际': '', 'BRTV': '北京', '北京北京': '北京', ' ': '', '北京淘': '', '⁺': '+', "R": "","4K":"","奥林匹克":"",
         "内蒙古":"内蒙"
     }
@@ -154,7 +153,7 @@ def filter_channels():
                     if url not in unique_channels:
                         if any(keyword in channel_name for keyword in keywords):
                             if "CCTV" in channel_name and channel_name != "CCTV4":
-                                channel_name = ''.join(filter(lambda x: x not in "汉字", channel_name))
+                                channel_name = re.sub(r'\W', '', channel_name)  # 删除非字母和数字的字符
                             unique_channels[url] = channel_name
                         else:
                             filtered_out.append((channel_name, url))
@@ -256,11 +255,6 @@ def measure_download_speed_parallel(channels, max_threads=5):
 def natural_key(string):
     """生成自然排序的键"""
     return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', string)]
-
-def natural_key(string):
-    """自然排序的关键函数，用于对字符串进行排序。"""
-    import re
-    return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', string)]
 
 def group_and_sort_channels(channels):
     """根据规则分组并排序频道信息，并保存到itvlist"""
