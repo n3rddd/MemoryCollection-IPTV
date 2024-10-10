@@ -124,15 +124,20 @@ def get_iptv(ip_list):
     return all_results  # 返回所有 IP 的结果
 
 def filter_channels():
-    """对频道名称过滤和修改"""
-    keywords = ["CCTV", "卫视", "凤凰", "影院", "剧场", "CHC", "娱乐", "淘","星影","光影","经典电影","精选"]
+    """对频道名称过滤和修改，同时保留速度信息"""
+    # 保留关键词列表
+    keywords = ["CCTV", "卫视", "凤凰", "影院", "剧场", "CHC", "娱乐", "淘", "星影", "光影", "经典电影", "精选"]
+    
+    # 需要放弃的关键词列表
+    discard_keywords = ["广告", "测试", "购物", "复刻", "空白"]
+    
     unique_channels = {}
     filtered_out = []
 
     replace_keywords = {
-        'HD': '', '-': '', 'IPTV': '', '[': '', ']' : '', '超清': '', '高清': '', '标清': '',"上海东方":"东方",
-        '中文国际': '', 'BRTV': '北京', '北京北京': '北京', ' ': '', '北京淘': '', '⁺': '+', "R": "","4K":"","奥林匹克":"",
-        "内蒙古":"内蒙"
+        'HD': '', '-': '', 'IPTV': '', '[': '', ']' : '', '超清': '', '高清': '', '标清': '', "上海东方": "东方",
+        '中文国际': '', 'BRTV': '北京', '北京北京': '北京', ' ': '', '北京淘': '', '⁺': '+', "R": "", "4K": "", "奥林匹克": "",
+        "内蒙古": "内蒙"
     }
 
     try:
@@ -147,36 +152,50 @@ def filter_channels():
                     # 对url进行关键词替换为空
                     url = url.replace("#", "").replace(" ", "")
 
+                    # 替换频道名称中的关键词
                     for key, value in replace_keywords.items():
                         channel_name = channel_name.replace(key, value)
 
+                    # 如果频道名称包含 discard_keywords 中的关键词，跳过该频道
+                    if any(discard_keyword in channel_name for discard_keyword in discard_keywords):
+                        filtered_out.append((channel_name, url, speed))  # 记录被过滤掉的频道及速度
+                        continue  # 跳过该频道
+
+                    # 如果频道名称包含 "CCTV" 且不是 "CCTV4"，删除所有汉字
+                    if "CCTV" in channel_name and channel_name != "CCTV4":
+                        channel_name = re.sub(r'[\u4e00-\u9fa5]', '', channel_name)  # 删除所有汉字
+                        channel_name = re.sub(r'\W', '', channel_name)  # 删除非字母和数字的字符
+
+                    # 如果频道 URL 不在 unique_channels 中且包含关键词列表的内容，则保存
                     if url not in unique_channels:
                         if any(keyword in channel_name for keyword in keywords):
-                            if "CCTV" in channel_name and channel_name != "CCTV4":
-                                channel_name = re.sub(r'\W', '', channel_name)  # 删除非字母和数字的字符
-                            unique_channels[url] = channel_name
+                            unique_channels[url] = (channel_name, speed)  # 保留频道名称和速度信息
                         else:
-                            filtered_out.append((channel_name, url))
+                            filtered_out.append((channel_name, url, speed))  # 记录被过滤掉的频道及速度
 
+        # 对频道名称进行自然排序
         def natural_sort_key(channel):
             match = re.match(r"CCTV(\d+)", channel)
             if match:
                 return (0, int(match.group(1)))
             return (1, channel)
 
+        # 保存过滤后的频道信息
         with open('itv.txt', 'w', encoding='utf-8') as f:
-            sorted_channels = sorted(unique_channels.items(), key=lambda item: natural_sort_key(item[1]))
-            for index, (url, channel_name) in enumerate(sorted_channels, start=123):
-                f.write(f"{channel_name},{url},{speed}\n")
+            sorted_channels = sorted(unique_channels.items(), key=lambda item: natural_sort_key(item[1][0]))  # 基于名称排序
+            for index, (url, (channel_name, speed)) in enumerate(sorted_channels, start=123):
+                f.write(f"{channel_name},{url},{speed}\n")  
 
-        with open('../../../IPTV/filtered_out_itv.txt', 'w', encoding='utf-8') as f:
-            for channel_name, url in filtered_out:
-                f.write(f"{channel_name},{url}\n")
+        # 保存被过滤掉的频道信息
+        with open('filtered_out_itv.txt', 'w', encoding='utf-8') as f:
+            for channel_name, url, speed in filtered_out:
+                f.write(f"{channel_name},{url},{speed}\n") 
         print("名称筛选和替换完成！")
         return True  # 返回成功
     except Exception as e:
         print(f"处理失败: {e}")
         return False  # 返回失败
+
 
 def read_channels(filename):
     """读取频道信息，并根据 URL 去重"""
@@ -303,7 +322,7 @@ def group_and_sort_channels(channels):
         overflow_groups[group_name] = overflow_list
 
     # 保存到文件
-    with open('../itvlist.txt', 'w', encoding='utf-8') as file:
+    with open('itvlist.txt', 'w', encoding='utf-8') as file:
         for group_name, channel_list in filtered_groups.items():
             file.write(f"{group_name}:\n")
             for name, url, speed in channel_list:
@@ -311,7 +330,7 @@ def group_and_sort_channels(channels):
             file.write("\n")  # 打印空行分隔组
 
     # 保存超过8个的频道到新文件
-    with open('filtered_itvlist.txt', 'w', encoding='utf-8') as file:
+    with open('fil_itvlist.txt', 'w', encoding='utf-8') as file:
         for group_name, channel_list in overflow_groups.items():
             if channel_list:  # 只写入非空组
                 file.write(f"{group_name}\n")
@@ -350,7 +369,7 @@ if __name__ == "__main__":
     ip_list = set()
     ip_list.update(get_ip("上海"))
     ip_list.update(get_ip("北京"))
-    ip_list.update(get_ip("辽宁"))
+    ip_list.update(get_ip("广东"))
     if ip_list:
         iptv_list = get_iptv(ip_list)
         if iptv_list:
@@ -369,4 +388,4 @@ if __name__ == "__main__":
                     print("分组后的频道信息已保存到 itvlist.txt.")
                     token = os.getenv("GITHUB_TOKEN")
                     if token :
-                        upload_file_to_github(token, "IPTV", "../itvlist.txt")
+                        upload_file_to_github(token, "IPTV", "itvlist.txt")
