@@ -33,8 +33,10 @@ jobs:
 
     - name: Upload updated file to repository
       run: |
-        git config --global user.email "you@example.com"
-        git config --global user.name "Your Name"
+        git config --global user.email "csszue@gmail.com"
+        git config --global user.name "MemoryCollection"
         git add itvlist.txt
+        git add itv.txt
+        git add filitv.txt
         git commit -m "Update IPTV list"
         git push
