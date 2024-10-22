@@ -36,4 +36,5 @@ jobs:
           git config --local user.name "MemoryCollection"
           git add *.txt
           git commit -m "Sync TXT files" || echo "No changes to commit"
-          git push
+          git push --force  # 强制推送
+
