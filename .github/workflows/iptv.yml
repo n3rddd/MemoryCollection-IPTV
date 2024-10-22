@@ -1,8 +1,8 @@
 name: up iptv
 
 on:
-  schedule:
-    - cron: '0 10 * * *'  # UTC时间10点，即北京时间18点
+  # schedule:
+  #  - cron: '0 10 * * *'  # UTC时间10点，即北京时间18点
   workflow_dispatch:  # 允许手动触发工作流
 
 jobs:
