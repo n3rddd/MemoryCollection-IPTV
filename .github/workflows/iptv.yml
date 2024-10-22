@@ -1,48 +1,36 @@
-name: Update IPTV list
+name: Sync TXT Files
 
 on:
-  # 手动触发
-  workflow_dispatch:
-
-  # 定时触发：每天北京时间下午6点（北京时间比UTC早8小时）
   schedule:
-    - cron: '00 10 * * *'  # 10:00 UTC = 18:00 CST (Beijing Time)
+    - cron: '0 10 * * *'  # UTC时间10点，即北京时间18点
+  workflow_dispatch:  # 允许手动触发工作流
 
 jobs:
-  update_iptv:
+  sync_files:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install python3-dev build-essential
-
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: '3.x'  # 使用Python 3的最新版本
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install --prefer-binary "aiohttp==3.8.5" requests beautifulsoup4 github lxml
+          pip install requests beautifulsoup4 PyGithub
 
-      - name: Run IPTV script
+      - name: Run the script
         run: |
-          python script.py  # 替换为你实际的脚本名称
-
-      - name: Configure Git
-        run: |
-          git config --global user.email "csszue@gmail.com"
-          git config --global user.name "MemoryCollection"
+          python main.py
 
       - name: Commit and push changes
         run: |
-          git add itvlist.txt itv.txt filitv.txt
-          git commit -m "Update IPTV list"
+          git config --local user.email "csszue@gmail.com"
+          git config --local user.name "GitHub Actions"
+          git add *.txt
+          git commit -m "Sync TXT files" || echo "No changes to commit"
           git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
