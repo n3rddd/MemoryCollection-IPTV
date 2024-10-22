@@ -371,8 +371,8 @@ if __name__ == "__main__":
     ip_list.update(get_ip("广东"))
     if ip_list:
         iptv_list = get_iptv(ip_list)
+        print(iptv_list)
         if iptv_list:
-            print(iptv_list)
             if filter_channels():
                 channels = read_channels('itv.txt')
                 results = measure_download_speed_parallel(channels, max_threads=5)

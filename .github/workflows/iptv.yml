@@ -27,6 +27,9 @@ jobs:
         run: |
           python main.py
 
+      - name: List files
+        run: ls -la  # 列出文件，方便调试
+
       - name: Commit and push changes
         run: |
           git config --local user.email "csszue@gmail.com"
