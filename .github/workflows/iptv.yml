@@ -1,0 +1,40 @@
+name: Run IPTV Script
+
+on:
+  push:
+    branches:
+      - main  # 可以根据需要更改触发分支
+  schedule:
+    - cron: "0 0 * * *"  # 这个是每天午夜运行一次，可以根据需要调整时间
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests beautifulsoup4 PyGithub
+
+    - name: Run IPTV Script
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub 的自动令牌来更新仓库
+      run: |
+        python main.py  # 确保你的 Python 脚本在项目根目录下并命名为 main.py
+
+    - name: Upload updated file to repository
+      run: |
+        git config --global user.email "you@example.com"
+        git config --global user.name "Your Name"
+        git add itvlist.txt
+        git commit -m "Update IPTV list"
+        git push

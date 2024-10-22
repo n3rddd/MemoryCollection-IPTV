@@ -137,7 +137,7 @@ def filter_channels():
     replace_keywords = {
         'HD': '', '-': '', 'IPTV': '', '[': '', ']' : '', '超清': '', '高清': '', '标清': '', "上海东方": "东方",
         '中文国际': '', 'BRTV': '北京', '北京北京': '北京', ' ': '', '北京淘': '', '⁺': '+', "R": "", "4K": "", "奥林匹克": "",
-        "内蒙古": "内蒙"
+        "内蒙古": "内蒙","外网":""
     }
 
     try:
@@ -161,8 +161,7 @@ def filter_channels():
                         filtered_out.append((channel_name, url, speed))  # 记录被过滤掉的频道及速度
                         continue  # 跳过该频道
 
-                    # 如果频道名称包含 "CCTV" 且不是 "CCTV4"，删除所有汉字
-                    if "CCTV" in channel_name and channel_name != "CCTV4":
+                    if "cctv" in channel_name.lower() and "cctv4" not in channel_name.lower():
                         channel_name = re.sub(r'[\u4e00-\u9fa5]', '', channel_name)  # 删除所有汉字
                         channel_name = re.sub(r'\W', '', channel_name)  # 删除非字母和数字的字符
 
@@ -187,9 +186,9 @@ def filter_channels():
                 f.write(f"{channel_name},{url},{speed}\n")  
 
         # 保存被过滤掉的频道信息
-        with open('filtered_out_itv.txt', 'w', encoding='utf-8') as f:
-            for channel_name, url, speed in filtered_out:
-                f.write(f"{channel_name},{url},{speed}\n") 
+        # with open('filtered_out_itv.txt', 'w', encoding='utf-8') as f:
+        #     for channel_name, url, speed in filtered_out:
+        #         f.write(f"{channel_name},{url},{speed}\n") 
         print("名称筛选和替换完成！")
         return True  # 返回成功
     except Exception as e:
@@ -330,7 +329,7 @@ def group_and_sort_channels(channels):
             file.write("\n")  # 打印空行分隔组
 
     # 保存超过8个的频道到新文件
-    with open('fil_itvlist.txt', 'w', encoding='utf-8') as file:
+    with open('filitv.txt', 'w', encoding='utf-8') as file:
         for group_name, channel_list in overflow_groups.items():
             if channel_list:  # 只写入非空组
                 file.write(f"{group_name}\n")

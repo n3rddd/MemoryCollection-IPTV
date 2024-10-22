@@ -582,8 +582,8 @@
             "timeout": 5
         },
         {
-            "name": "filtered_itvlist",
-            "url": "./filtered_itvlist.txt",
+            "name": "filitv",
+            "url": "./filitv.txt",
             "playerType": 2,
             "timeout": 5
         }
