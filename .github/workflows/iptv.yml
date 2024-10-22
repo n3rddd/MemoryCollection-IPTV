@@ -1,4 +1,4 @@
-name: Sync TXT Files
+name: up iptv
 
 on:
   schedule:
