@@ -109,7 +109,7 @@ def get_iptv(ip_list):
                         if 'udp' not in url and url not in seen_urls:
                             seen_urls.add(url)
                             results.append((channel_name, url))
-
+            print(f"IP {ip} 爬取到 {len(results)} 条频道信息")
             # 输出当前 IP 的结果，并保存到文件
             with open('itv.txt', 'a', encoding='utf-8') as f:
                 for channel_name, url in results:
@@ -367,8 +367,8 @@ if __name__ == "__main__":
 
     ip_list = set()
     ip_list.update(get_ip("上海"))
-    ip_list.update(get_ip("北京"))
-    ip_list.update(get_ip("广东"))
+    # ip_list.update(get_ip("北京"))
+    # ip_list.update(get_ip("广东"))
     if ip_list:
         iptv_list = get_iptv(ip_list)
         if iptv_list:
