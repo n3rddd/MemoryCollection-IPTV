@@ -87,7 +87,6 @@ def get_iptv(ip_list):
             "Referer": f"http://tonkiang.us/hotellist.html?s={ip}&Submit=+",
             "Content-Type": "application/x-www-form-urlencoded"
         }
-        print(f"爬取：{ip}")
         try:
             response = requests.get(base_url, headers=headers)
             response.raise_for_status()  # 检查请求是否成功
@@ -116,6 +115,7 @@ def get_iptv(ip_list):
                     line = f"{channel_name},{url},0\n"
                     f.write(line)  # 写入文件
 
+            print(f"IP {ip} 爬取到 {len(results)} 个频道")
             all_results.extend(results)  # 将当前 IP 的结果添加到总结果中
 
         except requests.exceptions.RequestException as e:
