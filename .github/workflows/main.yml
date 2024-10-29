@@ -16,12 +16,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3  # 更新到 v3
 
       - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.8'  # 可以根据需要更改 Python 版本
+        uses: actions/setup-python@v4  # 保持 v4，适用于 Node.js 20
 
       - name: Install dependencies
         run: |
@@ -32,7 +30,7 @@ jobs:
         run: python main.py
 
       - name: Upload results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # 更新到 v4
         with:
           name: txt-files
           path: '*.txt'
