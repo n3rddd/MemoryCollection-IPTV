@@ -27,11 +27,10 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run script
-        run: |
-          python main.py
+        run: python main.py
 
       - name: Upload results
         uses: actions/upload-artifact@v3
         with:
           name: txt-files
-          path: *.txt  # 假设您的文本文件以 .txt 结尾
+          path: '*.txt'  # 使用单引号，确保通配符有效
