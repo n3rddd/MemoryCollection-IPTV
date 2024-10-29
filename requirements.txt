@@ -1,6 +1,5 @@
 altgraph
 attrs
-platform
 beautifulsoup4
 certifi
 cffi
