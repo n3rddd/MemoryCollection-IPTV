@@ -12,14 +12,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # 使用Windows环境
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3  # 更新到 v3
 
       - name: Set up Python
-        uses: actions/setup-python@v4  # 保持 v4，适用于 Node.js 20
+        uses: actions/setup-python@v4  # 保持 v4
 
       - name: Install dependencies
         run: |
@@ -27,7 +27,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run script
-        run: python log/main.py
+        run: python main.py  # 使用反斜杠（\）表示路径
 
       - name: Upload results
         uses: actions/upload-artifact@v4  # 更新到 v4
