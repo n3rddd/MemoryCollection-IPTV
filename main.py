@@ -20,14 +20,19 @@ def get_ua():
 
 def get_headers(base_url):
     headers = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-        "Accept-Language": "zh-CN,zh-Hans;q=0.9,zh;q=0.8,und;q=0.7",
-        "Cache-Control": "max-age=0",
-        "Content-Type": "application/x-www-form-urlencoded",
-        "DNT": "1",
-        "Origin": base_url,
-        "User-Agent": get_ua()
-    }
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Cache-Control": "max-age=0",
+    "Content-Type": "application/x-www-form-urlencoded",
+    "DNT": "1",
+    "Host": "tonkiang.us",
+    "Origin": "http://tonkiang.us",
+    "Proxy-Connection": "keep-alive",
+    "Referer": "http://tonkiang.us/hoteliptv.php",
+    "Upgrade-Insecure-Requests": "1",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+}
     return headers
 
 def ip_exists(ip):
