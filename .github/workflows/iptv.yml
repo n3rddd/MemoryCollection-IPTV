@@ -1,4 +1,4 @@
-name: Run IPTV Scraper
+name: Run IPTV Scraper on Windows
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # 切换到 Windows 环境
     
     steps:
       - name: Checkout code
@@ -20,12 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc python3-dev
+          python-version: '3.11'  # 推荐使用 3.11，兼容性较高
 
       - name: Install dependencies
         run: |
