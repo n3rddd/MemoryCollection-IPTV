@@ -1,4 +1,4 @@
-name: Run IPTV Scraper on Windows
+name: Run Python Script
 
 on:
   push:
@@ -7,35 +7,31 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest  # 切换到 Windows 环境
-    
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'  # 推荐使用 3.11，兼容性较高
+          python-version: '3.8'  # 可以根据需要更改 Python 版本
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run main.py script
+      - name: Run script
         run: |
           python main.py
 
-      - name: Commit and push .txt files
-        run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add *.txt
-          git commit -m "Add generated txt files"
-          git push
-        continue-on-error: true
+      - name: Upload results
+        uses: actions/upload-artifact@v3
+        with:
+          name: txt-files
+          path: *.txt  # 假设您的文本文件以 .txt 结尾
