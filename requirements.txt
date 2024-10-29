@@ -146,3 +146,7 @@ webencodings==0.5.1
 websocket-client==1.7.0
 wrapt==1.16.0
 yarl==1.11.1
+nvidia-cuda-runtime-cu12==12.1.105; sys_platform == 'linux'
+nvidia-cudnn-cu12==8.9.2.26; sys_platform == 'linux'
+# 其他依赖项不变
+
