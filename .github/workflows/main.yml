@@ -27,7 +27,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run script
-        run: python main.py
+        run: python log/main.py
 
       - name: Upload results
         uses: actions/upload-artifact@v4  # 更新到 v4
