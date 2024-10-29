@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+    paths:
+      - main.py  # 当 main.py 变动时触发
+  schedule:
+    - cron: '0 */6 * * *'  # 每隔 6 小时运行一次
+  workflow_dispatch:  # 允许手动触发工作流
 
 jobs:
   build:
@@ -33,4 +35,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: txt-files
-          path: '*.txt'  # 使用单引号，确保通配符有效
+          path: '*.txt'
