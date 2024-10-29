@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:  # 手动触发运行
+  workflow_dispatch:
 
 jobs:
   build:
@@ -20,7 +20,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'  # 确保使用正确的 Python 版本
+          python-version: '3.12'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc python3-dev
 
       - name: Install dependencies
         run: |
@@ -31,13 +36,11 @@ jobs:
         run: |
           python main.py
 
-      # 将生成的所有 .txt 文件推送到仓库
       - name: Commit and push .txt files
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add *.txt  # 添加所有生成的 .txt 文件
+          git add *.txt
           git commit -m "Add generated txt files"
           git push
-        # 避免无更改时导致的错误
-        continue-on-error: true  
+        continue-on-error: true
