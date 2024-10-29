@@ -8,31 +8,47 @@ from queue import Queue
 from github import Github
 from datetime import datetime
 import os
+import platform
 
 def get_ua():
-    user_agents = [
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0',
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15',
-        'Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Mobile Safari/537.36'
-    ]
-    return random.choice(user_agents)
+    user_agents = {
+        'Windows': [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+        ],
+        'Darwin': [  # macOS
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15',
+        ],
+        'Linux': [
+            'Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Mobile Safari/537.36',
+        ]
+    }
+
+    # 获取当前系统的类型
+    system = platform.system()
+    
+    # 根据系统类型选择相应的 User-Agent
+    if system in user_agents:
+        return random.choice(user_agents[system])
+    else:
+        # 如果没有特定的 User-Agent，返回一个默认值
+        return 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
 
 def get_headers(base_url):
     headers = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-    "Accept-Encoding": "gzip, deflate",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Cache-Control": "max-age=0",
-    "Content-Type": "application/x-www-form-urlencoded",
-    "DNT": "1",
-    "Host": "tonkiang.us",
-    "Origin": "http://tonkiang.us",
-    "Proxy-Connection": "keep-alive",
-    "Referer": "http://tonkiang.us/hoteliptv.php",
-    "Upgrade-Insecure-Requests": "1",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
-}
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Cache-Control": "max-age=0",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "DNT": "1",
+        "Host": "tonkiang.us",
+        "Proxy-Connection": "keep-alive",
+        "Referer": "http://tonkiang.us/hoteliptv.php",
+        "Upgrade-Insecure-Requests": "1",
+        "Origin": base_url,
+        "User-Agent": get_ua()
+    }
     return headers
 
 def ip_exists(ip):
@@ -119,7 +135,6 @@ def get_iptv(ip_list):
                 for channel_name, url in results:
                     line = f"{channel_name},{url},0\n"
                     f.write(line)  # 写入文件
-
             print(f"IP {ip} 爬取到 {len(results)} 个频道")
             all_results.extend(results)  # 将当前 IP 的结果添加到总结果中
 
@@ -142,7 +157,7 @@ def filter_channels():
     replace_keywords = {
         'HD': '', '-': '', 'IPTV': '', '[': '', ']' : '', '超清': '', '高清': '', '标清': '', "上海东方": "东方",
         '中文国际': '', 'BRTV': '北京', '北京北京': '北京', ' ': '', '北京淘': '', '⁺': '+', "R": "", "4K": "", "奥林匹克": "",
-        "内蒙古": "内蒙","外网":"","（":"","）":""
+        "内蒙古": "内蒙","外网":""
     }
 
     try:
