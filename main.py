@@ -136,7 +136,7 @@ def filter_channels():
     replace_keywords = {
         'HD': '', '-': '', 'IPTV': '', '[': '', ']' : '', '超清': '', '高清': '', '标清': '', "上海东方": "东方",
         '中文国际': '', 'BRTV': '北京', '北京北京': '北京', ' ': '', '北京淘': '', '⁺': '+', "R": "", "4K": "", "奥林匹克": "",
-        "内蒙古": "内蒙","外网":""
+        "内蒙古": "内蒙","外网":"","CCTV4亚洲":"CCTV4"
     }
 
     try:
@@ -193,7 +193,6 @@ def filter_channels():
     except Exception as e:
         print(f"处理失败: {e}")
         return False  # 返回失败
-
 
 def read_channels(filename):
     """读取频道信息，并根据 URL 去重"""
@@ -328,18 +327,18 @@ def group_and_sort_channels(channels):
         for group_name, channel_list in filtered_groups.items():
             file.write(f"{group_name}:\n")
             for name, url, speed in channel_list:
+                #if speed is not None and speed > 0.5:
                 file.write(f"{name},{url},{speed}\n")
             file.write("\n")  # 打印空行分隔组
 
-    # 保存超过8个的频道到新文件
     with open('filitv.txt', 'w', encoding='utf-8') as file:
         for group_name, channel_list in overflow_groups.items():
-            if channel_list:  # 只写入非空组
-                file.write(f"{group_name}\n")
-                for name, url, speed in channel_list:
-                    file.write(f"{name},{url},{speed}\n")
-                file.write("\n")  # 打印空行分隔组
-
+            file.write(f"{group_name}\n")
+            for name, url, speed in channel_list:
+                #if speed is not None and speed > 0.5:
+                file.write(f"{name},{url},{speed}\n")
+            file.write("\n")  # 打印空行分隔组
+    print("分组后的频道信息已保存到 itvlist.txt.")
     return groups
 
 def upload_file_to_github(token, repo_name, file_path, branch='main'):
@@ -366,7 +365,6 @@ def upload_file_to_github(token, repo_name, file_path, branch='main'):
     except Exception as e:
         print("文件上传失败:", e)
 
-
 def read_line_count(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         return sum(1 for _ in file)
@@ -376,31 +374,29 @@ def main():
 
     if line_count < 700:
         ip_list = set()
-        ip_list.update(get_ip("辽宁"))
-        ip_list.update(get_ip("北京"))
-        ip_list.update(get_ip("河北"))
+        ip_list.update(get_ip("辽宁")),ip_list.update(get_ip("北京")),ip_list.update(get_ip("河北"))
         
         if ip_list:
             iptv_list = get_iptv(ip_list)
-            if iptv_list:
-                filter_channels()
+            if iptv_list:filter_channels()
+                
     print("开始测速：")
-    # 读取频道并测速
+
     channels = read_channels('itv.txt')
     results = measure_download_speed_parallel(channels, max_threads=5)
                     
-    # 保存结果
     with open('itv.txt', 'w', encoding='utf-8') as file:
         for name, url, speed in results:
-            if speed > 0.01:
-                file.write(f"{name},{url},{speed:.2f}\n")  # 保留两位小数
+            if speed > 0.4:
+                file.write(f"{name},{url},{speed:.2f}\n") 
     
     print("已经完成测速！")
                     
     channels = read_channels('itv.txt')
     if channels:
-        grouped_channels = group_and_sort_channels(channels)
-        print("分组后的频道信息已保存到 itvlist.txt.")
+
+        group_and_sort_channels(channels)
+
         token = os.getenv("GITHUB_TOKEN")
         if token:
             upload_file_to_github(token, "IPTV", "itvlist.txt")
