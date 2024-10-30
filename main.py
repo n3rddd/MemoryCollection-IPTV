@@ -8,6 +8,7 @@ from queue import Queue
 from github import Github
 from datetime import datetime
 import os
+import json
 
 def get_ua():
     user_agents = [
@@ -124,74 +125,70 @@ def get_iptv(ip_list):
 
 def filter_channels():
     """对频道名称过滤和修改，同时保留速度信息"""
-    # 保留关键词列表
-    keywords = ["CCTV", "卫视", "凤凰", "影院", "剧场", "CHC", "娱乐", "淘", "星影", "光影", "经典电影", "精选"]
     
-    # 需要放弃的关键词列表
-    discard_keywords = ["广告", "测试", "购物", "复刻", "空白"]
-    
-    unique_channels = {}
-    filtered_out = []
-
-    replace_keywords = {
-        'HD': '', '-': '', 'IPTV': '', '[': '', ']' : '', '超清': '', '高清': '', '标清': '', "上海东方": "东方",
-        '中文国际': '', 'BRTV': '北京', '北京北京': '北京', ' ': '', '北京淘': '', '⁺': '+', "R": "", "4K": "", "奥林匹克": "",
-        "内蒙古": "内蒙","外网":"","CCTV4亚洲":"CCTV4"
-    }
-
     try:
-        with open("itv.txt", 'r', encoding='utf-8') as f:
-            for line in f:
-                if line.strip():
-                    parts = line.strip().split(',')
-                    channel_name = parts[0].strip()
-                    url = parts[1].strip()
-                    speed = parts[2].strip()
+        # 读取配置文件 db.json
+        with open("db.json", 'r', encoding='utf-8') as config_file:
+            config = json.load(config_file)
+            keywords = config["data"]["keywords"]
+            discard_keywords = config["data"]["discard_keywords"]
+            replace_keywords = config["data"]["replace_keywords"]
+    
+        unique_channels = {}
+        filtered_out = []
 
-                    # 对url进行关键词替换为空
-                    url = url.replace("#", "").replace(" ", "")
+        try:
+            with open("itv.txt", 'r', encoding='utf-8') as f:
+                for line in f:
+                    if line.strip():
+                        parts = line.strip().split(',')
+                        channel_name = parts[0].strip()
+                        url = parts[1].strip()
+                        speed = parts[2].strip()
 
-                    # 替换频道名称中的关键词
-                    for key, value in replace_keywords.items():
-                        channel_name = channel_name.replace(key, value)
+                        # 对url进行关键词替换为空
+                        url = url.replace("#", "").replace(" ", "")
 
-                    # 如果频道名称包含 discard_keywords 中的关键词，跳过该频道
-                    if any(discard_keyword in channel_name for discard_keyword in discard_keywords):
-                        filtered_out.append((channel_name, url, speed))  # 记录被过滤掉的频道及速度
-                        continue  # 跳过该频道
+                        # 替换频道名称中的关键词
+                        for key, value in replace_keywords.items():
+                            channel_name = channel_name.replace(key, value)
 
-                    if "cctv" in channel_name.lower() and "cctv4" not in channel_name.lower():
-                        channel_name = re.sub(r'[\u4e00-\u9fa5]', '', channel_name)  # 删除所有汉字
-                        channel_name = re.sub(r'\W', '', channel_name)  # 删除非字母和数字的字符
-
-                    # 如果频道 URL 不在 unique_channels 中且包含关键词列表的内容，则保存
-                    if url not in unique_channels:
-                        if any(keyword in channel_name for keyword in keywords):
-                            unique_channels[url] = (channel_name, speed)  # 保留频道名称和速度信息
-                        else:
+                        # 如果频道名称包含 discard_keywords 中的关键词，跳过该频道
+                        if any(discard_keyword in channel_name for discard_keyword in discard_keywords):
                             filtered_out.append((channel_name, url, speed))  # 记录被过滤掉的频道及速度
+                            continue  # 跳过该频道
 
-        # 对频道名称进行自然排序
-        def natural_sort_key(channel):
-            match = re.match(r"CCTV(\d+)", channel)
-            if match:
-                return (0, int(match.group(1)))
-            return (1, channel)
+                        if "cctv" in channel_name.lower() and "cctv4" not in channel_name.lower():
+                            channel_name = re.sub(r'[\u4e00-\u9fa5]', '', channel_name)  # 删除所有汉字
+                            channel_name = re.sub(r'\W', '', channel_name)  # 删除非字母和数字的字符
 
-        # 保存过滤后的频道信息
-        with open('itv.txt', 'w', encoding='utf-8') as f:
-            sorted_channels = sorted(unique_channels.items(), key=lambda item: natural_sort_key(item[1][0]))  # 基于名称排序
-            for index, (url, (channel_name, speed)) in enumerate(sorted_channels, start=123):
-                f.write(f"{channel_name},{url},{speed}\n")  
+                        # 如果频道 URL 不在 unique_channels 中且包含关键词列表的内容，则保存
+                        if url not in unique_channels:
+                            if any(keyword in channel_name for keyword in keywords):
+                                unique_channels[url] = (channel_name, speed)  # 保留频道名称和速度信息
+                            else:
+                                filtered_out.append((channel_name, url, speed))  # 记录被过滤掉的频道及速度
 
-        # 保存被过滤掉的频道信息
-        # with open('filtered_out_itv.txt', 'w', encoding='utf-8') as f:
-        #     for channel_name, url, speed in filtered_out:
-        #         f.write(f"{channel_name},{url},{speed}\n") 
-        print("名称筛选和替换完成！")
-        return True  # 返回成功
+            # 对频道名称进行自然排序
+            def natural_sort_key(channel):
+                match = re.match(r"CCTV(\d+)", channel)
+                if match:
+                    return (0, int(match.group(1)))
+                return (1, channel)
+
+            # 保存过滤后的频道信息
+            with open('itv.txt', 'w', encoding='utf-8') as f:
+                sorted_channels = sorted(unique_channels.items(), key=lambda item: natural_sort_key(item[1][0]))  # 基于名称排序
+                for index, (url, (channel_name, speed)) in enumerate(sorted_channels, start=123):
+                    f.write(f"{channel_name},{url},{speed}\n")  
+
+            print("名称筛选和替换完成！")
+            return True  # 返回成功
+        except Exception as e:
+            print(f"处理失败: {e}")
+            return False  # 返回失败
     except Exception as e:
-        print(f"处理失败: {e}")
+        print(f"配置文件读取失败: {e}")
         return False  # 返回失败
 
 def read_channels(filename):
@@ -209,7 +206,7 @@ def read_channels(filename):
 
     return channels
 
-def test_download_speed(url, test_duration=5):
+def test_download_speed(url, test_duration=3):
     """
     测试下载速度，固定访问时间为 test_duration 秒
     """
@@ -236,7 +233,7 @@ def test_download_speed(url, test_duration=5):
     except requests.RequestException:
         return 0
 
-def measure_download_speed_parallel(channels, max_threads=5):
+def measure_download_speed_parallel(channels, max_threads=8):
     """
     并行测量下载速度
     """
