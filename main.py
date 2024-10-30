@@ -133,7 +133,7 @@ def filter_channels():
             keywords = config["data"]["keywords"]
             discard_keywords = config["data"]["discard_keywords"]
             replace_keywords = config["data"]["replace_keywords"]
-    
+        
         unique_channels = {}
         filtered_out = []
 
@@ -371,7 +371,7 @@ def main():
 
     if line_count < 700:
         ip_list = set()
-        ip_list.update(get_ip("辽宁")),ip_list.update(get_ip("北京")),ip_list.update(get_ip("河北"))
+        ip_list.update(get_ip("辽宁"))#,ip_list.update(get_ip("北京")),ip_list.update(get_ip("河北"))
         
         if ip_list:
             iptv_list = get_iptv(ip_list)
