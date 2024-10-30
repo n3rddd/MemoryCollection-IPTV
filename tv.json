@@ -1,5 +1,3 @@
-//关注微信公众号：奇奇乐分享，发送“本地包”，获取本地包更新链接与图文教程。
-
 {
     "spider": "./spider.jar",
     "wallpaper": "http://like.xn--z7x900a.com/ppic/feimao.php",
@@ -7,7 +5,7 @@
     "sites": [
         {
             "key": "drpy_js_豆瓣",
-            "name": "豆瓣┃首页",
+            "name": "🐼豆瓣┃首页",
             "type": 3,
             "api": "csp_Douban",
             "searchable": 0
@@ -447,15 +445,6 @@
                 "ratio": 1.597
             },
             "ext": "./json/高中课堂.json"
-        },
-        {
-            "key": "push_agent",
-            "name": "关注公众号：肥猫宝贝",
-            "type": 3,
-            "api": "csp_Push",
-            "playerType": "1",
-            "searchable": 0,
-            "ext": ".json/txt/ken.txt"
         }
     ],
     "parses": [
