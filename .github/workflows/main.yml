@@ -1,11 +1,7 @@
 name: Run Python Script
 
 on:
-  push:
-    branches:
-      - main  # 在 main 分支上推送时触发
   workflow_dispatch:  # 可以手动触发
-
 
 jobs:
   run-script:
@@ -26,6 +22,12 @@ jobs:
           pip install requests beautifulsoup4 PyGithub
 
       - name: Run main.py
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 从 GitHub Secrets 获取 Token
         run: python main.py
+
+      - name: Commit and push updated files
+        run: |
+          git config --local user.name "MemoryCollection"
+          git config --local user.email "csszue@gamil.com"
+          git add *.txt  # 添加所有 .txt 文件
+          git commit -m "Update text files after running main.py" || echo "No changes to commit"
+          git push origin main  # 直接推送到 main 分支
