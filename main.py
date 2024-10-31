@@ -22,7 +22,6 @@ def ip_exists(ip):
         return False  # 如果文件不存在，返回 False
     return False
 
-
 def get_ip(diqu):
     """爬取ip"""
     headers = {
@@ -43,12 +42,28 @@ def get_ip(diqu):
 
     ip_list = set()
     if response.status_code == 200:
-        ip_addresses = re.findall(r"hotellist\.html\?s=([\d.]+:\d+)", response.text)
-        ip_list.update(ip_addresses)
+        # 使用 BeautifulSoup 解析 HTML
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # 找到所有的 result div
+        results = soup.find_all("div", class_="result")
+
+        for result in results:
+            # 提取 IP 地址
+            ip_link = result.find("a", href=re.compile(r"hotellist\.html\?s="))
+            if ip_link:
+                # 从 href 中提取 IP 地址及端口
+                ip_address = re.search(r"s=([\d.]+:\d+)", ip_link['href'])
+                if ip_address:
+                    # 提取状态
+                    status_div = result.find("div", style="color: crimson;")
+                    if status_div and "暂时失效" in status_div.get_text():
+                        continue  # 如果状态为“暂时失效”，则跳过此 IP
+                    ip_list.add(ip_address.group(1))  # 添加有效的 IP 地址
+
     else:
         ip_list.add(f"请求失败，状态码: {response.status_code}")
 
-    # 返回字典：{'192.168.1.1:8080', '10.0.0.1:8000', '172.16.254.1:3000'}
     return ip_list
 
 
@@ -380,7 +395,7 @@ def main():
 
     if line_count < 700:
         ip_list = set()
-        ip_list.update(get_ip("辽宁")), ip_list.update(get_ip("北京")), ip_list.update(get_ip("河北"))
+        ip_list.update(get_ip("辽宁")), ip_list.update(get_ip("北京")), ip_list.update(get_ip("CHC"))
 
         if ip_list:
             iptv_list = get_iptv(ip_list)
@@ -404,6 +419,7 @@ def main():
         token = os.getenv("GITHUB_TOKEN")
         if token:
             upload_file_to_github(token, "IPTV", "itvlist.txt")
+            upload_file_to_github(token, "IPTV", "itv.txt")
 
 if __name__ == "__main__":
     main()
