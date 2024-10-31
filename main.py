@@ -299,7 +299,6 @@ def group_and_sort_channels(channels):
             -x[2] if x[2] is not None else float('-inf')  # 速度从高到低排序
         ))
 
-    # 筛选相同名称的频道，只保存前8个
     filtered_groups = {}
     overflow_groups = {}
 
@@ -309,7 +308,10 @@ def group_and_sort_channels(channels):
         overflow_list = []
 
         for channel in channel_list:
-            name = channel[0]
+            name, url, speed = channel
+            # if speed <= 0.5:  # 过滤掉速度小于或等于0.5的频道  测速时间已经过滤掉过一边速度了。
+            #     continue
+
             if name not in seen_names:
                 seen_names[name] = 0
 
@@ -327,7 +329,6 @@ def group_and_sort_channels(channels):
         for group_name, channel_list in filtered_groups.items():
             file.write(f"{group_name}:\n")
             for name, url, speed in channel_list:
-                # if speed is not None and speed > 0.5:
                 file.write(f"{name},{url},{speed}\n")
             file.write("\n")  # 打印空行分隔组
 
@@ -335,7 +336,6 @@ def group_and_sort_channels(channels):
         for group_name, channel_list in overflow_groups.items():
             file.write(f"{group_name}\n")
             for name, url, speed in channel_list:
-                # if speed is not None and speed > 0.5:
                 file.write(f"{name},{url},{speed}\n")
             file.write("\n")  # 打印空行分隔组
     print("分组后的频道信息已保存到 itvlist.txt.")
@@ -372,7 +372,10 @@ def read_line_count(file_path):
         return sum(1 for _ in file)
 
 
-if __name__ == "__main__":
+
+
+def main():
+
     line_count = read_line_count('itv.txt')
 
     if line_count < 700:
@@ -390,16 +393,17 @@ if __name__ == "__main__":
 
     with open('itv.txt', 'w', encoding='utf-8') as file:
         for name, url, speed in results:
-            if speed > 0.4:
+            if speed >= 0.5:  #只保存速度≥0.5的
                 file.write(f"{name},{url},{speed:.2f}\n")
 
     print("已经完成测速！")
 
     channels = read_channels('itv.txt')
     if channels:
-
         group_and_sort_channels(channels)
-
         token = os.getenv("GITHUB_TOKEN")
         if token:
             upload_file_to_github(token, "IPTV", "itvlist.txt")
+
+if __name__ == "__main__":
+    main()
