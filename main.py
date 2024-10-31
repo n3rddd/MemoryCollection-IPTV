@@ -45,7 +45,11 @@ def ip_exists(ip):
 def get_ip(diqu):
     """爬取ip"""
     base_url = "http://tonkiang.us/hoteliptv.php"
-    data = {"saerch": diqu, "Submit": "+"}
+    data = {  
+            "saerch": diqu, 
+            "Submit": "+",  
+            "city": "NjU5MzQ2Nzg2NzJrMms"  
+        }  
     ip_list = set()
     print("开始爬取ip")
     with requests.Session() as session:
@@ -123,73 +127,75 @@ def get_iptv(ip_list):
 
     return all_results  # 返回所有 IP 的结果
 
-def filter_channels():
-    """对频道名称过滤和修改，同时保留速度信息"""
-    
-    try:
-        # 读取配置文件 db.json
-        with open("db.json", 'r', encoding='utf-8') as config_file:
-            config = json.load(config_file)
-            keywords = config["data"]["keywords"]
-            discard_keywords = config["data"]["discard_keywords"]
-            replace_keywords = config["data"]["replace_keywords"]
-        
-        unique_channels = {}
-        filtered_out = []
+def filter_channels():  
+    """对频道名称过滤和修改，同时保留速度信息"""  
+      
+    try:  
+        # 读取配置文件 db.json  
+        with open("db.json", 'r', encoding='utf-8') as config_file:  
+            config = json.load(config_file)  
+            keywords = config["data"]["keywords"]  
+            discard_keywords = config["data"]["discard_keywords"]  
+            replace_keywords = config["data"]["replace_keywords"]  
+          
+        unique_channels = {}  
+        filtered_out = []  
+  
+        try:  
+            with open("itv.txt", 'r', encoding='utf-8') as f:  
+                for line in f:  
+                    if line.strip():  
+                        parts = line.strip().split(',')  
+                        channel_name = parts[0].strip()  
+                        url = parts[1].strip()  
+                        speed = parts[2].strip()  
+  
+                        url_cleaned = url.replace("#", "").replace(" ", "")  
+  
+                        # 如果频道名称包含 discard_keywords 中的关键词，跳过该频道  
+                        if any(discard_keyword in channel_name for discard_keyword in discard_keywords):  
+                            filtered_out.append((channel_name, url_cleaned, speed))  # 记录被过滤掉的频道及速度  
+                            continue  # 跳过该频道，不再进行后续检查  
+  
+                        # 替换频道名称中的关键词  
+                        for key, value in replace_keywords.items():  
+                            channel_name = channel_name.replace(key, value)  
 
-        try:
-            with open("itv.txt", 'r', encoding='utf-8') as f:
-                for line in f:
-                    if line.strip():
-                        parts = line.strip().split(',')
-                        channel_name = parts[0].strip()
-                        url = parts[1].strip()
-                        speed = parts[2].strip()
-
-                        # 对url进行关键词替换为空
-                        url = url.replace("#", "").replace(" ", "")
-
-                        # 替换频道名称中的关键词
-                        for key, value in replace_keywords.items():
-                            channel_name = channel_name.replace(key, value)
-
-                        # 如果频道名称包含 discard_keywords 中的关键词，跳过该频道
-                        if any(discard_keyword in channel_name for discard_keyword in discard_keywords):
-                            filtered_out.append((channel_name, url, speed))  # 记录被过滤掉的频道及速度
-                            continue  # 跳过该频道
-
-                        if "cctv" in channel_name.lower() and "cctv4" not in channel_name.lower():
-                            channel_name = re.sub(r'[\u4e00-\u9fa5]', '', channel_name)  # 删除所有汉字
-                            channel_name = re.sub(r'\W', '', channel_name)  # 删除非字母和数字的字符
-
-                        # 如果频道 URL 不在 unique_channels 中且包含关键词列表的内容，则保存
-                        if url not in unique_channels:
-                            if any(keyword in channel_name for keyword in keywords):
-                                unique_channels[url] = (channel_name, speed)  # 保留频道名称和速度信息
-                            else:
-                                filtered_out.append((channel_name, url, speed))  # 记录被过滤掉的频道及速度
-
-            # 对频道名称进行自然排序
-            def natural_sort_key(channel):
-                match = re.match(r"CCTV(\d+)", channel)
-                if match:
-                    return (0, int(match.group(1)))
-                return (1, channel)
-
-            # 保存过滤后的频道信息
-            with open('itv.txt', 'w', encoding='utf-8') as f:
-                sorted_channels = sorted(unique_channels.items(), key=lambda item: natural_sort_key(item[1][0]))  # 基于名称排序
-                for index, (url, (channel_name, speed)) in enumerate(sorted_channels, start=123):
+                        # 对特定CCTV频道进行处理（除了CCTV4）  
+                        if "cctv" in channel_name.lower() and "cctv4" not in channel_name.lower():  
+                            channel_name = re.sub(r'[\u4e00-\u9fa5]', '', channel_name)  # 删除所有汉字  
+                            channel_name = re.sub(r'\W', '', channel_name)  # 删除非字母和数字的字符  
+  
+                        # 如果频道名称包含 keywords 中的关键词，则保存（此时已经排除了discard_keywords）  
+                        if any(keyword in channel_name for keyword in keywords):  
+                            if url not in unique_channels:  
+                                unique_channels[url] = (channel_name, speed)  # 保留频道名称和速度信息  
+                        else:  
+                            # 如果不包含keywords中的任何关键词，则也视为被过滤掉  
+                            filtered_out.append((channel_name, url_cleaned, speed))  # 记录被过滤掉的频道及速度（这里使用了处理过的URL，但原逻辑中未明确这一点）  
+  
+            # 对频道名称进行自然排序  
+            def natural_sort_key(channel_name):  
+                match = re.match(r"CCTV(\d+)", channel_name)  
+                if match:  
+                    return (0, int(match.group(1)))  
+                return (1, channel_name)  
+  
+            # 保存过滤后的频道信息  
+            with open('itv.txt', 'w', encoding='utf-8') as f:   
+                sorted_channels = sorted(unique_channels.items(), key=lambda item: natural_sort_key(item[1][0]))  
+                for index, (url, (channel_name, speed)) in enumerate(sorted_channels, start=123):  
                     f.write(f"{channel_name},{url},{speed}\n")  
-
-            print("名称筛选和替换完成！")
-            return True  # 返回成功
-        except Exception as e:
-            print(f"处理失败: {e}")
-            return False  # 返回失败
-    except Exception as e:
-        print(f"配置文件读取失败: {e}")
-        return False  # 返回失败
+  
+            print("名称筛选和替换完成！")  
+            return True  # 返回成功  
+        except Exception as e:  
+            print(f"处理失败: {e}")  
+            return False  # 返回失败  
+    except Exception as e:  
+        print(f"配置文件读取失败: {e}")  
+        return False  # 返回失败  
+  
 
 def read_channels(filename):
     """读取频道信息，并根据 URL 去重"""
