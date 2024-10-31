@@ -6,6 +6,7 @@ on:
       - main  # 在 main 分支上推送时触发
   workflow_dispatch:  # 可以手动触发
 
+
 jobs:
   run-script:
     runs-on: ubuntu-latest  # 使用最新的 Ubuntu 作为运行环境
