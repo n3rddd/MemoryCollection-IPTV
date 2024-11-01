@@ -25,6 +25,7 @@ def ip_exists(ip):
 
 def get_ip(diqu):
     """爬取ip"""
+    print(diqu)
     headers = {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
         "accept-language": "zh-CN,zh;q=0.9",
