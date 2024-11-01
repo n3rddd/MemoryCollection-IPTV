@@ -100,7 +100,7 @@ def get_iptv(ip_list):
             channel_count = 0
 
             # 打开文件以追加写入数据
-            with open('itv.txt', 'a', encoding='utf-8') as file:
+            with open('Origfile.txt', 'a', encoding='utf-8') as file:
                 # 找到所有 class="result" 的元素
                 results = soup.find_all(class_='result')
                 for result in results:
@@ -131,7 +131,7 @@ def get_iptv(ip_list):
     return True  # 返回 True 表示完成
 
 
-def filter_channels():
+def filter_channels(file_path):
     """对频道名称过滤和修改，同时保留速度信息"""
 
     try:
@@ -143,10 +143,9 @@ def filter_channels():
             replace_keywords = {key.lower(): value for key, value in config["data"]["replace_keywords"].items()}
 
         unique_channels = {}
-        filtered_out = []
 
         try:
-            with open("itv.txt", 'r', encoding='utf-8') as f:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     if line.strip():
                         parts = line.strip().split(',')
@@ -154,32 +153,34 @@ def filter_channels():
                         url = parts[1].strip()
                         speed = parts[2].strip()
 
+                        # 移除 URL 中的无效字符
                         url_cleaned = url.replace("#", "").replace(" ", "")
+
+                        # 添加 URL 过滤条件，不包含 'http' 的 URL 将被跳过
+                        if "http" not in url_cleaned:
+                            continue  # 跳过该 URL，不再进行后续检查
 
                         # 频道名称转换为小写进行关键词过滤
                         lower_channel_name = channel_name.lower()
 
                         # 如果频道名称包含 discard_keywords 中的关键词，跳过该频道
                         if any(discard_keyword in lower_channel_name for discard_keyword in discard_keywords):
-                            filtered_out.append((channel_name, url_cleaned, speed))  # 记录被过滤掉的频道及速度
                             continue  # 跳过该频道，不再进行后续检查
 
                         # 替换频道名称中的关键词（不区分大小写）
                         for key, value in replace_keywords.items():
                             channel_name = re.sub(re.escape(key), value, channel_name, flags=re.IGNORECASE)
 
-                        # 对特定CCTV频道进行处理（除了CCTV4）
-                        if "cctv" in lower_channel_name and "cctv4" not in lower_channel_name:
-                            channel_name = re.sub(r'[\u4e00-\u9fa5]', '', channel_name)  # 删除所有汉字
-                            channel_name = re.sub(r'\W', '', channel_name)  # 删除非字母和数字的字符
-
-                        # 如果频道名称包含 keywords 中的关键词，则保存
-                        if any(keyword in lower_channel_name for keyword in keywords):
-                            if url not in unique_channels:
-                                unique_channels[url] = (channel_name, speed)  # 保留频道名称和速度信息
+                        # 如果 keywords 为空，跳过关键词筛选
+                        if keywords:
+                            # 如果频道名称包含 keywords 中的关键词，则保存
+                            if any(keyword in lower_channel_name for keyword in keywords):
+                                if url not in unique_channels:
+                                    unique_channels[url] = (channel_name, speed)  # 保留频道名称和速度信息
                         else:
-                            # 如果不包含 keywords 中的任何关键词，也视为被过滤掉
-                            filtered_out.append((channel_name, url_cleaned, speed))
+                            # 直接保存频道信息，不考虑关键词
+                            if url not in unique_channels:
+                                unique_channels[url] = (channel_name, speed)
 
             # 对频道名称进行自然排序
             def natural_sort_key(channel_name):
@@ -204,7 +205,6 @@ def filter_channels():
     except Exception as e:
         print(f"配置文件读取失败: {e}")
         return False  # 返回失败
-
 
 def read_channels(filename):
     """读取频道信息，并根据 URL 去重"""
@@ -351,11 +351,6 @@ def group_and_sort_channels(channels):
                 file.write(f"{name},{url},{speed}\n")
             file.write("\n")  # 打印空行分隔组
 
-        # 保存“更新时间”到 itvlist.txt 文件
-        file.write("更新时间,#genre#:\n")
-        for name, url, speed in groups['更新时间,#genre#']:
-            file.write(f"{name},{url},{speed}\n")
-        file.write("\n")
 
     # 保存溢出列表到 filitv.txt
     with open('filitv.txt', 'w', encoding='utf-8') as file:
@@ -406,14 +401,15 @@ def main():
 
     line_count = read_line_count('itv.txt')
     if line_count < 700:
+        print("爬取IP")
         ip_list = set()
         ip_list.update(get_ip("辽宁")), ip_list.update(get_ip("北京")), ip_list.update(get_ip("CHC")),ip_list.update(get_ip("湖南 "))
 
         if ip_list:
             iptv_list = get_iptv(ip_list)
-            if iptv_list: filter_channels()
+            filter_channels("Origfile.txt")
 
-    print("开始测速：")
+
 
     channels = read_channels('itv.txt')
     results = measure_download_speed_parallel(channels, max_threads=5)
