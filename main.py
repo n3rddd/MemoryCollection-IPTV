@@ -15,7 +15,7 @@ from datetime import datetime
 def ip_exists(ip):
     """检查ip是否在文件中存在"""
     try:
-        with open('itv.txt', 'r', encoding='utf-8') as f:
+        with open('txt/itv.txt', 'r', encoding='utf-8') as f:
             for line in f:
                 if ip in line:
                     return True
@@ -100,7 +100,7 @@ def get_iptv(ip_list):
             channel_count = 0
 
             # 打开文件以追加写入数据
-            with open('Origfile.txt', 'a', encoding='utf-8') as file:
+            with open('txt/Origfile.txt', 'a', encoding='utf-8') as file:
                 # 找到所有 class="result" 的元素
                 results = soup.find_all(class_='result')
                 for result in results:
@@ -136,7 +136,7 @@ def filter_channels(file_path):
 
     try:
         # 读取配置文件 db.json
-        with open("db.json", 'r', encoding='utf-8') as config_file:
+        with open("txt/db.json", 'r', encoding='utf-8') as config_file:
             config = json.load(config_file)
             keywords = [keyword.lower() for keyword in config["data"]["keywords"]]
             discard_keywords = [keyword.lower() for keyword in config["data"]["discard_keywords"]]
@@ -195,7 +195,7 @@ def filter_channels(file_path):
                 return (1, channel_name)
 
             # 保存过滤后的频道信息
-            with open('itv.txt', 'w', encoding='utf-8') as f:
+            with open('txt/itv.txt', 'w', encoding='utf-8') as f:
                 sorted_channels = sorted(unique_channels.items(), key=lambda item: natural_sort_key(item[1][0]))
                 for index, (url, (channel_name, speed)) in enumerate(sorted_channels, start=123):
                     f.write(f"{channel_name},{url},{speed}\n")
@@ -354,10 +354,10 @@ def group_and_sort_channels(channels):
     # 添加当前时间的频道到“更新时间”分组
     current_time_str = datetime.now().strftime("%m-%d-%H")
     with open('itvlist.txt', 'a', encoding='utf-8') as file:
-        file.write(f"{current_time_str},#genre#:\n{current_time_str},https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/mv.mp4\n")
+        file.write(f"{current_time_str},#genre#:\n{current_time_str},https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/TB/mv.mp4\n")
 
     # 保存溢出列表到 filitv.txt
-    with open('filitv.txt', 'w', encoding='utf-8') as file:
+    with open('txt/filitv.txt', 'w', encoding='utf-8') as file:
         for group_name, channel_list in overflow_groups.items():
             file.write(f"{group_name}:\n")
             for name, url, speed in channel_list:
@@ -403,7 +403,7 @@ def read_line_count(file_path):
 
 def main():
 
-    line_count = read_line_count('itv.txt')
+    line_count = read_line_count('txt/itv.txt')
     if line_count < 700:
         print("爬取IP")
         ip_list = set()
@@ -411,27 +411,25 @@ def main():
 
         if ip_list:
             iptv_list = get_iptv(ip_list)
-            filter_channels("Origfile.txt")
+            filter_channels("txt/Origfile.txt")
 
-
-
-    channels = read_channels('itv.txt')
+    channels = read_channels('txt/itv.txt')
     results = measure_download_speed_parallel(channels, max_threads=5)
 
-    with open('itv.txt', 'w', encoding='utf-8') as file:
+    with open('txt/itv.txt', 'w', encoding='utf-8') as file:
         for name, url, speed in results:
             if speed >= 0.5:  #只保存速度≥0.5的
                 file.write(f"{name},{url},{speed:.2f}\n")
 
     print("已经完成测速！")
 
-    channels = read_channels('itv.txt')
+    channels = read_channels('txt/itv.txt')
     if channels:
         group_and_sort_channels(channels)
         token = os.getenv("GITHUB_TOKEN")
         if token:
             upload_file_to_github(token, "IPTV", "itvlist.txt")
-            upload_file_to_github(token, "IPTV", "itv.txt")
+            upload_file_to_github(token, "IPTV", "txt/itv.txt")
 
 if __name__ == "__main__":
     main()
