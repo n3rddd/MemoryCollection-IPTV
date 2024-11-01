@@ -311,7 +311,7 @@ def group_and_sort_channels(channels):
             groups['其他频道,#genre#'].append((name, url, speed))
 
     # 添加当前时间的频道到“更新时间”分组
-    current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    current_time_str = datetime.now().strftime("%m-%d-%H")
     groups['更新时间,#genre#'].append((current_time_str, '120.1.1.1', 5))
 
     # 对每组进行排序
