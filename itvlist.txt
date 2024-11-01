@@ -480,6 +480,6 @@ CHC电影,http://171.118.185.6:9999/rtp/226.0.2.93:8004,0.64
 风云剧场,http://124.230.56.249:55555/udp/239.76.254.50:9000,0.95
 风云剧场,http://124.230.56.126:55555/udp/239.76.254.50:9000,0.9
 
-更新时间,#genre#:
-11-01-14,120.1.1.1,5
 
+11-01-16,#genre#:
+11-01-16,https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/mv.mp4

@@ -298,8 +298,7 @@ def group_and_sort_channels(channels):
     groups = {
         '央视频道,#genre#': [],
         '卫视频道,#genre#': [],
-        '其他频道,#genre#': [],
-        '更新时间,#genre#': []
+        '其他频道,#genre#': []
     }
 
     for name, url, speed in channels:
@@ -309,10 +308,6 @@ def group_and_sort_channels(channels):
             groups['卫视频道,#genre#'].append((name, url, speed))
         else:
             groups['其他频道,#genre#'].append((name, url, speed))
-
-    # 添加当前时间的频道到“更新时间”分组
-    current_time_str = datetime.now().strftime("%m-%d-%H")
-    groups['更新时间,#genre#'].append((current_time_str, '120.1.1.1', 5))
 
     # 对每组进行排序
     for group in groups.values():
@@ -350,7 +345,11 @@ def group_and_sort_channels(channels):
             for name, url, speed in channel_list:
                 file.write(f"{name},{url},{speed}\n")
             file.write("\n")  # 打印空行分隔组
+        # 添加当前时间的频道到“更新时间”分组
 
+    current_time_str = datetime.now().strftime("%m-%d-%H")
+    with open('itvlist.txt', 'a', encoding='utf-8') as file:
+        file.write(f"\n{current_time_str},#genre#:\n{current_time_str},https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/mv.mp4\n")
 
     # 保存溢出列表到 filitv.txt
     with open('filitv.txt', 'w', encoding='utf-8') as file:
