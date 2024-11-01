@@ -349,7 +349,7 @@ def group_and_sort_channels(channels):
 
     current_time_str = datetime.now().strftime("%m-%d-%H")
     with open('itvlist.txt', 'a', encoding='utf-8') as file:
-        file.write(f"\n{current_time_str},#genre#:\n{current_time_str},https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/mv.mp4\n")
+        file.write(f"{current_time_str},#genre#:\n{current_time_str},https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/mv.mp4\n")
 
     # 保存溢出列表到 filitv.txt
     with open('filitv.txt', 'w', encoding='utf-8') as file:
