@@ -1,20 +1,12 @@
-### 国内订阅地址
+itvlist.txt每9个小时测速一次，使用北京服务器测速
 
-- https://raw.gitmirror.com/MemoryCollection/IPTV/main/itvlist.txt
-- https://raw.gitmirror.com/MemoryCollection/IPTV/main/tv.json
+个人使用效果还不错。
 
-### 影视仓
+### 电视直播
+    https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/itvlist.txt
+### tvbox接口
+    https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/tv.json
 
-- https://wwqo.lanzouo.com/iTW1629kktlc
-- 密码:4ofa
-
-
-    "lives": [
-          {
-            "name": "wi6",
-            "url": "./itvlist.txt",
-            "epg": "http://epg.51zmt.top:8000/api/i/?ch={name}&date={date}",
-            "logo": "https://raw.githubusercontent.com/MemoryCollection/IPTV/main/TB/{name}.png",
-            "playerType": 2,
-            "timeout": 3
-        }
+### 壳子
+- FongMi  https://tv.xn--yhqu5zs87a.top/
+- 影视仓 https://wwqo.lanzouo.com/iTW1629kktlc 密码:4ofa

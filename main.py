@@ -9,6 +9,7 @@ from github import Github
 from datetime import datetime
 import os
 import json
+from datetime import datetime
 
 
 def ip_exists(ip):
@@ -290,13 +291,15 @@ def natural_key(string):
     """生成自然排序的键"""
     return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', string)]
 
+from datetime import datetime
 
 def group_and_sort_channels(channels):
-    """根据规则分组并排序频道信息，并保存到itvlist"""
+    """根据规则分组并排序频道信息，并保存到 itvlist 和 filitv"""
     groups = {
         '央视频道,#genre#': [],
         '卫视频道,#genre#': [],
-        '其他频道,#genre#': []
+        '其他频道,#genre#': [],
+        '更新时间,#genre#': []
     }
 
     for name, url, speed in channels:
@@ -306,6 +309,10 @@ def group_and_sort_channels(channels):
             groups['卫视频道,#genre#'].append((name, url, speed))
         else:
             groups['其他频道,#genre#'].append((name, url, speed))
+
+    # 添加当前时间的频道到“更新时间”分组
+    current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    groups['更新时间,#genre#'].append((current_time_str, '120.1.1.1', 5))
 
     # 对每组进行排序
     for group in groups.values():
@@ -324,9 +331,6 @@ def group_and_sort_channels(channels):
 
         for channel in channel_list:
             name, url, speed = channel
-            # if speed <= 0.5:  # 过滤掉速度小于或等于0.5的频道  测速时间已经过滤掉过一边速度了。
-            #     continue
-
             if name not in seen_names:
                 seen_names[name] = 0
 
@@ -339,7 +343,7 @@ def group_and_sort_channels(channels):
         filtered_groups[group_name] = filtered_list
         overflow_groups[group_name] = overflow_list
 
-    # 保存到文件
+    # 保存到 itvlist.txt 文件
     with open('itvlist.txt', 'w', encoding='utf-8') as file:
         for group_name, channel_list in filtered_groups.items():
             file.write(f"{group_name}:\n")
@@ -347,14 +351,23 @@ def group_and_sort_channels(channels):
                 file.write(f"{name},{url},{speed}\n")
             file.write("\n")  # 打印空行分隔组
 
+        # 保存“更新时间”到 itvlist.txt 文件
+        file.write("更新时间,#genre#:\n")
+        for name, url, speed in groups['更新时间,#genre#']:
+            file.write(f"{name},{url},{speed}\n")
+        file.write("\n")
+
+    # 保存溢出列表到 filitv.txt
     with open('filitv.txt', 'w', encoding='utf-8') as file:
         for group_name, channel_list in overflow_groups.items():
-            file.write(f"{group_name}\n")
+            file.write(f"{group_name}:\n")
             for name, url, speed in channel_list:
                 file.write(f"{name},{url},{speed}\n")
             file.write("\n")  # 打印空行分隔组
+
     print("分组后的频道信息已保存到 itvlist.txt.")
     return groups
+
 
 
 def upload_file_to_github(token, repo_name, file_path, branch='main'):
@@ -392,10 +405,9 @@ def read_line_count(file_path):
 def main():
 
     line_count = read_line_count('itv.txt')
-
     if line_count < 700:
         ip_list = set()
-        ip_list.update(get_ip("辽宁")), ip_list.update(get_ip("北京")), ip_list.update(get_ip("CHC"))
+        ip_list.update(get_ip("辽宁")), ip_list.update(get_ip("北京")), ip_list.update(get_ip("CHC")),ip_list.update(get_ip("湖南 "))
 
         if ip_list:
             iptv_list = get_iptv(ip_list)
