@@ -173,8 +173,10 @@ def filter_channels(file_path):
 
                         channel_name = re.sub("CHC电影", "CHC高清电影", channel_name, flags=re.IGNORECASE)
 
-                        if "CCTV" == channel_name  :
+                        if "CCTV" == channel_name :
                             continue
+                        if "军旅剧场"==channel_name:
+                            channel_name = re.sub("军旅剧场", "NEWTV军旅剧场", channel_name, flags=re.IGNORECASE)
 
                         # 如果 keywords 为空，跳过关键词筛选
                         if keywords:
@@ -405,7 +407,7 @@ def main():
     if line_count < 700:
         print("爬取IP")
         ip_list = set()
-        ip_list.update(get_ip("辽宁")), ip_list.update(get_ip("北京")), ip_list.update(get_ip("CHC")),ip_list.update(get_ip("湖南 "))
+        ip_list.update(get_ip("辽宁")), ip_list.update(get_ip("北京")), ip_list.update(get_ip("CHC")),ip_list.update(get_ip("NEWTV "))
 
         if ip_list:
             iptv_list = get_iptv(ip_list)
@@ -432,9 +434,5 @@ def main():
             upload_file_to_github(token, "IPTV", "itv.txt")
 
 if __name__ == "__main__":
-    #main()
-    filter_channels("Origfile.txt")
-    channels = read_channels('itv.txt')
-    if channels:
-        group_and_sort_channels(channels)
+    main()
 
