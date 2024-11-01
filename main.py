@@ -157,7 +157,7 @@ def filter_channels(file_path):
                         url_cleaned = url.replace("#", "").replace(" ", "")
 
                         # 添加 URL 过滤条件，不包含 'http' 的 URL 将被跳过
-                        if "http" not in url_cleaned:
+                        if "http" not in url_cleaned or "///"  in url_cleaned:
                             continue  # 跳过该 URL，不再进行后续检查
 
                         # 频道名称转换为小写进行关键词过滤
@@ -171,14 +171,17 @@ def filter_channels(file_path):
                         for key, value in replace_keywords.items():
                             channel_name = re.sub(re.escape(key), value, channel_name, flags=re.IGNORECASE)
 
+                        channel_name = re.sub("CHC电影", "CHC高清电影", channel_name, flags=re.IGNORECASE)
+
+                        if "CCTV" == channel_name  :
+                            continue
+
                         # 如果 keywords 为空，跳过关键词筛选
                         if keywords:
-                            # 如果频道名称包含 keywords 中的关键词，则保存
                             if any(keyword in lower_channel_name for keyword in keywords):
                                 if url not in unique_channels:
-                                    unique_channels[url] = (channel_name, speed)  # 保留频道名称和速度信息
+                                    unique_channels[url] = (channel_name, speed)
                         else:
-                            # 直接保存频道信息，不考虑关键词
                             if url not in unique_channels:
                                 unique_channels[url] = (channel_name, speed)
 
@@ -304,7 +307,7 @@ def group_and_sort_channels(channels):
     for name, url, speed in channels:
         if 'cctv' in name.lower():
             groups['央视频道,#genre#'].append((name, url, speed))
-        elif '卫视' in name:
+        elif '卫视' in name or '凤凰' in name:
             groups['卫视频道,#genre#'].append((name, url, speed))
         else:
             groups['其他频道,#genre#'].append((name, url, speed))
@@ -345,8 +348,8 @@ def group_and_sort_channels(channels):
             for name, url, speed in channel_list:
                 file.write(f"{name},{url},{speed}\n")
             file.write("\n")  # 打印空行分隔组
-        # 添加当前时间的频道到“更新时间”分组
 
+    # 添加当前时间的频道到“更新时间”分组
     current_time_str = datetime.now().strftime("%m-%d-%H")
     with open('itvlist.txt', 'a', encoding='utf-8') as file:
         file.write(f"{current_time_str},#genre#:\n{current_time_str},https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/mv.mp4\n")
@@ -429,4 +432,9 @@ def main():
             upload_file_to_github(token, "IPTV", "itv.txt")
 
 if __name__ == "__main__":
-    main()
+    #main()
+    filter_channels("Origfile.txt")
+    channels = read_channels('itv.txt')
+    if channels:
+        group_and_sort_channels(channels)
+
