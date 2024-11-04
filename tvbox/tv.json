@@ -1,5 +1,5 @@
 {
-    "spider": "./tvbox/spider.jar",
+    "spider": "https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/tvbox/spider.jar",
     "wallpaper": "http://like.xn--z7x900a.com/ppic/feimao.php",
     "logo": "https://like.xn--z7x900a.com/panda/0262.png",
     "sites": [
