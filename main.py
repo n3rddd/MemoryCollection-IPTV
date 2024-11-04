@@ -408,7 +408,7 @@ def main():
     if line_count < 700:
         print("爬取IP")
         ip_list = set()
-        ip_list.update(get_ip("辽宁")), ip_list.update(get_ip("北京")), ip_list.update(get_ip("CHC")),ip_list.update(get_ip("NEWTV "))
+        ip_list.update(get_ip("辽宁")), ip_list.update(get_ip("北京")), ip_list.update(get_ip("CHC"))
 
         if ip_list:
             iptv_list = get_iptv(ip_list)
