@@ -256,9 +256,9 @@ def test_download_speed(url, test_duration=3):
         return 0
 
 
-def measure_download_speed_parallel(channels, max_threads=8):
+def measure_download_speed_parallel(channels):
     """
-    并行测量下载速度
+    并行测量下载速度，线程数根据 CPU 核心数自动设置
     """
     results = []
     queue = Queue()
@@ -267,15 +267,18 @@ def measure_download_speed_parallel(channels, max_threads=8):
     for channel in channels:
         queue.put(channel)
 
+    max_threads = os.cpu_count() or 4  # 如果无法获取核心数，则默认使用 4 个线程
+    print(f"使用的线程数: {max_threads}")  # 打印当前线程数
+
     def worker():
-        nonlocal processed_count  # 使用 nonlocal 声明变量
+        nonlocal processed_count
         while not queue.empty():
             channel = queue.get()
             name, url, _ = channel
             speed = test_download_speed(url)
             results.append((name, url, speed))
-            processed_count += 1  # 增加已处理的频道数
-            if processed_count % (len(channels) // 20) == 0:  # 每处理 5% 的频道打印一次
+            processed_count += 1
+            if processed_count % (len(channels) // 20) == 0:
                 print(f"已处理 {processed_count} 个频道")
             queue.task_done()
 
@@ -292,45 +295,25 @@ def measure_download_speed_parallel(channels, max_threads=8):
 
     return results
 
-
 def natural_key(string):
-    """生成自然排序的键"""
+    """自然排序的辅助函数"""
     return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', string)]
-
-from datetime import datetime
-
-from datetime import datetime
-
-def natural_key(string_):
-    """自然排序的辅助函数"""
-    import re
-    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', string_)]
-
-
-from datetime import datetime
-import re
-
-
-def natural_key(string_):
-    """自然排序的辅助函数"""
-    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', string_)]
-
 
 def group_and_sort_channels(channels):
     """根据规则分组并排序频道信息，并保存到 itvlist 和 filitv"""
     groups = {
-        '央视频道,#genre#': [],
-        '卫视频道,#genre#': [],
-        '其他频道,#genre#': []
+        '央视频道': [],
+        '卫视频道': [],
+        '其他频道': []
     }
 
     for name, url, speed in channels:
         if 'cctv' in name.lower():
-            groups['央视频道,#genre#'].append((name, url, speed))
+            groups['央视频道'].append((name, url, speed))
         elif '卫视' in name or '凤凰' in name:
-            groups['卫视频道,#genre#'].append((name, url, speed))
+            groups['卫视频道'].append((name, url, speed))
         else:
-            groups['其他频道,#genre#'].append((name, url, speed))
+            groups['其他频道'].append((name, url, speed))
 
     # 对每组进行排序
     for group in groups.values():
@@ -390,7 +373,7 @@ def group_and_sort_channels(channels):
             for name, url, speed in channel_list:
                 m3u_file.write(
                     f'#EXTINF:-1 tvg-name="{name}" tvg-logo="https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/TB/{name}.png" group-title="{group_name}",{name}\n')
-                m3u_file.write(f"{url},{speed}\n")
+                m3u_file.write(f"{url}\n")  # 只写入 URL，不带速度
 
         # 添加当前时间的频道信息到 M3U 文件
         m3u_file.write(
@@ -401,20 +384,28 @@ def group_and_sort_channels(channels):
     return groups
 
 
-def upload_file_to_github(token, repo_name, file_path, branch='main'):
+from github import Github
+from datetime import datetime
+
+
+def upload_file_to_github(token, repo_name, file_path, folder='', branch='main'):
     """
-    将结果上传到 GitHub
+    将结果上传到 GitHub，并指定文件夹
     """
     g = Github(token)
     repo = g.get_user().get_repo(repo_name)
     with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
-    git_path = file_path.split('/')[-1]
+
+    git_path = f"{folder}/{file_path.split('/')[-1]}" if folder else file_path.split('/')[-1]
+
     try:
         contents = repo.get_contents(git_path, ref=branch)
     except:
         contents = None
+
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     try:
         if contents:
             repo.update_file(contents.path, current_time, content, contents.sha, branch=branch)
@@ -431,26 +422,24 @@ def read_line_count(file_path):
         return sum(1 for _ in file)
 
 
-
-
 def main():
 
     line_count = read_line_count('txt/itv.txt')
     if line_count < 700:
         print("爬取IP")
         ip_list = set()
-        ip_list.update(get_ip("辽宁")), ip_list.update(get_ip("北京")), ip_list.update(get_ip("CHC"))
+        ip_list.update(get_ip("辽宁")), ip_list.update(get_ip("北京")), ip_list.update(get_ip("河北"))
 
         if ip_list:
             iptv_list = get_iptv(ip_list)
             filter_channels("txt/Origfile.txt")
 
     channels = read_channels('txt/itv.txt')
-    results = measure_download_speed_parallel(channels, max_threads=5)
+    results = measure_download_speed_parallel(channels)
 
     with open('txt/itv.txt', 'w', encoding='utf-8') as file:
         for name, url, speed in results:
-            if speed >= 0.5  and speed <= 1.5 :  #只保存速度≥0.5的
+            if speed >= 0.5  :  #只保存速度≥0.5的  and speed <= 1.5
                 file.write(f"{name},{url},{speed:.2f}\n")
 
     print("已经完成测速！")
@@ -463,6 +452,7 @@ def main():
             upload_file_to_github(token, "IPTV", "itvlist.txt")
             upload_file_to_github(token, "IPTV", "itvlist.m3u")
             upload_file_to_github(token, "IPTV", "txt/itv.txt")
+            upload_file_to_github(token, "IPTV", "itvlist.m3u", folder="txt")
 
 
 if __name__ == "__main__":
