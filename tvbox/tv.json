@@ -36,8 +36,8 @@
             "key": "追剧",
             "name": "⭐｜追更｜专区",
             "type": 3,
-            "api": "./tvbox/api/9121b57512b75f996d3122a424b04355.js",
-            "ext": "./tvbox/txt/9d68d4ce43a3ec0cf97ed4633f979e15.txt"
+            "api": "./api/9121b57512b75f996d3122a424b04355.js",
+            "ext": "./txt/9d68d4ce43a3ec0cf97ed4633f979e15.txt"
         },
         {
             "key": "csp_SuBaiBai",
@@ -82,7 +82,7 @@
             "name": "🎃┃南瓜┃影视",
             "type": 3,
             "playerType": "2",
-            "api": "./tvbox/api/ng_open.js"
+            "api": "./api/ng_open.js"
         },
         {
             "key": "csp_Tvyb",
@@ -103,7 +103,7 @@
             "name": "💖┃Ivdy┃影视",
             "type": 3,
             "api": "csp_XBPQ",
-            "ext": "./tvbox/json/ivdy.json",
+            "ext": "./json/ivdy.json",
             "searchable": 0
         },
         {
@@ -196,15 +196,15 @@
             "name": "🛣┃低端┃影视",
             "type": 3,
             "playerType": "2",
-            "api": "./tvbox/api/drpy2.min.js",
-            "ext": "./tvbox/js/ddys.js"
+            "api": "./api/drpy2.min.js",
+            "ext": "./js/ddys.js"
         },
         {
             "key": "虎虎",
             "name": "🐯┃虎虎┃影视",
             "type": 3,
             "api": "csp_XBPQ",
-            "ext": "./tvbox/json/虎虎.json"
+            "ext": "./json/虎虎.json"
         },
         {
             "key": "csp_SP360",
@@ -292,10 +292,10 @@
             "key": "酷奇",
             "name": "🎤┃酷奇┃MV",
             "type": 3,
-            "api": "./tvbox/api/drpy2.min.js",
+            "api": "./api/drpy2.min.js",
             "searchable": 0,
             "quickSearch": 0,
-            "ext": "./tvbox/js/酷奇MV.js"
+            "ext": "./js/酷奇MV.js"
         },
         {
             "key": "MTV",
@@ -304,69 +304,69 @@
             "api": "csp_Bili",
             "searchable": 0,
             "quickSearch": 0,
-            "ext": "./tvbox/json/MTV.json"
+            "ext": "./json/MTV.json"
         },
         {
             "key": "虎牙直播js",
             "name": "🐯┃虎牙┃直播",
             "type": 3,
-            "api": "./tvbox/api/drpy2.min.js",
+            "api": "./api/drpy2.min.js",
             "searchable": 0,
             "quickSearch": 0,
             "playerType": 1,
-            "ext": "./tvbox/js/huya2.js"
+            "ext": "./js/huya2.js"
         },
         {
             "key": "斗鱼js",
             "name": "🐟┃斗鱼┃直播",
             "type": 3,
-            "api": "./tvbox/api/drpy2.min.js",
+            "api": "./api/drpy2.min.js",
             "searchable": 0,
             "quickSearch": 0,
             "playerType": 1,
-            "ext": "./tvbox/js/斗鱼直播.js"
+            "ext": "./js/斗鱼直播.js"
         },
         {
             "key": "聚短视频js",
             "name": "📽┃️聚短┃视频",
             "type": 3,
-            "api": "./tvbox/api/drpy2.min.js",
+            "api": "./api/drpy2.min.js",
             "searchable": 0,
             "quickSearch": 0,
-            "ext": "./tvbox/js/短视频.js"
+            "ext": "./js/短视频.js"
         },
         {
             "key": "drpy_js_310直播",
             "name": "🏀┃体育┃直播",
             "type": 3,
-            "api": "./tvbox/api/drpy2.min.js",
+            "api": "./api/drpy2.min.js",
             "changeable": 0,
             "gridview": 3,
             "style": {
                 "type": "list"
             },
-            "ext": "./tvbox/js/310直播.js"
+            "ext": "./js/310直播.js"
         },
         {
             "key": "米搜",
             "name": "🌖┃米搜┃网盘",
             "type": 3,
             "api": "csp_MiSou",
-            "ext": "./tvbox/txt/kk.txt"
+            "ext": "./txt/kk.txt"
         },
         {
             "key": "csp_Pansou",
             "name": "🚢┃盘搜┃网盘",
             "type": 3,
             "api": "csp_Pansou",
-            "ext": "./tvbox/txt/token.txt"
+            "ext": "./txt/token.txt"
         },
         {
             "key": "csp_PanSearch",
             "name": "🚃┃盘搜┃网盘",
             "type": 3,
             "api": "csp_PanSearch",
-            "ext": "./tvbox/txt/token.txt"
+            "ext": "./txt/token.txt"
         },
         {
             "key": "drpy_哔哩",
@@ -374,7 +374,7 @@
             "type": 3,
             "api": "csp_Bili",
             "playerType": 1,
-            "ext": "./tvbox/json/bilibili.json"
+            "ext": "./json/bilibili.json"
         }
     ],
 
