@@ -453,7 +453,7 @@ def main():
 
     with open('txt/itv.txt', 'w', encoding='utf-8') as file:
         for name, url, speed in results:
-            if speed >= 0.5  and speed <= 1.3 :  #只保存速度≥0.5的
+            if speed >= 0.5  :  #只保存速度≥0.5的and speed <= 1.3
                 file.write(f"{name},{url},{speed:.2f}\n")
 
     print("已经完成测速！")
@@ -467,7 +467,7 @@ def main():
             upload_file_to_github(token, "IPTV", "itvlist.m3u")
             upload_file_to_github(token, "IPTV", "filitv.m3u")
             upload_file_to_github(token, "IPTV", "txt/itv.txt")
-            upload_file_to_github(token, "IPTV", "itvlist.m3u", folder="txt")
+            upload_file_to_github(token, "IPTV", "txt/itv.txt", folder="txt")
 
 
 if __name__ == "__main__":
