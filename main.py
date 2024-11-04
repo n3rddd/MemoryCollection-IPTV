@@ -461,7 +461,9 @@ def main():
         token = os.getenv("GITHUB_TOKEN")
         if token:
             upload_file_to_github(token, "IPTV", "itvlist.txt")
+            upload_file_to_github(token, "IPTV", "itvlist.m3u")
             upload_file_to_github(token, "IPTV", "txt/itv.txt")
+
 
 if __name__ == "__main__":
     main()

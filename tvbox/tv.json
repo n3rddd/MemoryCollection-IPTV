@@ -386,6 +386,12 @@
             "logo": "https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/TB/{name}.png",
             "playerType": 2,
             "timeout": 3
+        },
+        {
+            "name": "m3u",
+            "url": "./itvlist.m3u",
+             "playerType": 2,
+            "timeout": 3
         }
     ]
 }
