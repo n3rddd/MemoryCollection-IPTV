@@ -299,6 +299,23 @@ def natural_key(string):
 
 from datetime import datetime
 
+from datetime import datetime
+
+def natural_key(string_):
+    """自然排序的辅助函数"""
+    import re
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', string_)]
+
+
+from datetime import datetime
+import re
+
+
+def natural_key(string_):
+    """自然排序的辅助函数"""
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', string_)]
+
+
 def group_and_sort_channels(channels):
     """根据规则分组并排序频道信息，并保存到 itvlist 和 filitv"""
     groups = {
@@ -355,7 +372,8 @@ def group_and_sort_channels(channels):
     # 添加当前时间的频道到“更新时间”分组
     current_time_str = datetime.now().strftime("%m-%d-%H")
     with open('itvlist.txt', 'a', encoding='utf-8') as file:
-        file.write(f"{current_time_str},#genre#:\n{current_time_str},https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/TB/mv.mp4\n")
+        file.write(
+            f"{current_time_str},#genre#:\n{current_time_str},https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/TB/mv.mp4\n")
 
     # 保存溢出列表到 filitv.txt
     with open('txt/filitv.txt', 'w', encoding='utf-8') as file:
@@ -365,9 +383,22 @@ def group_and_sort_channels(channels):
                 file.write(f"{name},{url},{speed}\n")
             file.write("\n")  # 打印空行分隔组
 
-    print("分组后的频道信息已保存到 itvlist.txt.")
-    return groups
+    # 生成 itvlist.m3u 文件
+    with open('itvlist.m3u', 'w', encoding='utf-8') as m3u_file:
+        m3u_file.write('#EXTM3U x-tvg-url="https://live.fanmingming.com/e.xml"\n')
+        for group_name, channel_list in filtered_groups.items():
+            for name, url, speed in channel_list:
+                m3u_file.write(
+                    f'#EXTINF:-1 tvg-name="{name}" tvg-logo="https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/TB/{name}.png" group-title="{group_name}",{name}\n')
+                m3u_file.write(f"{url},{speed}\n")
 
+        # 添加当前时间的频道信息到 M3U 文件
+        m3u_file.write(
+            f'#EXTINF:-1 tvg-name="{current_time_str}" group-title="{current_time_str}", {current_time_str}\n')
+        m3u_file.write("https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/TB/mv.mp4\n")
+
+    print("分组后的频道信息已保存到 itvlist.txt 和 itvlist.m3u.")
+    return groups
 
 
 def upload_file_to_github(token, repo_name, file_path, branch='main'):
