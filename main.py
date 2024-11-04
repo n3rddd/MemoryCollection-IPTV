@@ -419,7 +419,7 @@ def main():
 
     with open('txt/itv.txt', 'w', encoding='utf-8') as file:
         for name, url, speed in results:
-            if speed >= 0.5:  #只保存速度≥0.5的
+            if speed >= 0.5  and speed <= 1.5 :  #只保存速度≥0.5的
                 file.write(f"{name},{url},{speed:.2f}\n")
 
     print("已经完成测速！")
