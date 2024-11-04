@@ -213,141 +213,6 @@
             "api": "csp_SP360"
         },
         {
-            "key": "csp_BookTing",
-            "name": "📚┃听书┃音频",
-            "type": 3,
-            "playerType": "2",
-            "api": "csp_BookTing",
-            "searchable": 0,
-            "ext": "https://m.ting275.com",
-            "style": {
-                "type": "rect",
-                "ratio": 1.333
-            }
-        },
-        {
-            "key": "csp_YouShengBook",
-            "name": "📚┃有声┃小说",
-            "type": 3,
-            "playerType": "2",
-            "api": "csp_YouShengBook",
-            "searchable": 0,
-            "style": {
-                "type": "rect",
-                "ratio": 1.333
-            }
-        },
-        {
-            "key": "csp_Dm84",
-            "name": "🤣┃动漫┃巴士",
-            "type": 3,
-            "playerType": "2",
-            "api": "csp_Dm84"
-        },
-        {
-            "key": "csp_Anime1",
-            "name": "🐶┃日本┃动漫",
-            "type": 3,
-            "playerType": "2",
-            "api": "csp_Anime1"
-        },
-        {
-            "key": "csp_xifan",
-            "name": "🍚┃稀饭┃动漫",
-            "type": 3,
-            "api": "csp_Xifan",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1
-        },
-        {
-            "key": "csp_FirstAid",
-            "name": "🚑┃急救┃教学",
-            "type": 3,
-            "api": "csp_FirstAid",
-            "searchable": 0,
-            "quickSearch": 0,
-            "style": {
-                "type": "rect",
-                "ratio": 3.8
-            },
-            "gridview": "0-0-4.1"
-        },
-        {
-            "key": "酷狗",
-            "name": "🐾┃酷狗┃音乐",
-            "type": 3,
-            "api": "csp_Kugou",
-            "playerType": 2,
-            "ext": {
-                "classes": [
-                    {
-                        "type_name": "酷狗",
-                        "type_id": "kugou"
-                    }
-                ]
-            }
-        },
-        {
-            "key": "酷奇",
-            "name": "🎤┃酷奇┃MV",
-            "type": 3,
-            "api": "./tvbox/api/drpy2.min.js",
-            "searchable": 0,
-            "quickSearch": 0,
-            "ext": "./tvbox/js/酷奇MV.js"
-        },
-        {
-            "key": "MTV",
-            "name": "🎧┃明星┃MV",
-            "type": 3,
-            "api": "csp_Bili",
-            "searchable": 0,
-            "quickSearch": 0,
-            "ext": "./tvbox/json/MTV.json"
-        },
-        {
-            "key": "虎牙直播js",
-            "name": "🐯┃虎牙┃直播",
-            "type": 3,
-            "api": "./tvbox/api/drpy2.min.js",
-            "searchable": 0,
-            "quickSearch": 0,
-            "playerType": 1,
-            "ext": "./tvbox/js/huya2.js"
-        },
-        {
-            "key": "斗鱼js",
-            "name": "🐟┃斗鱼┃直播",
-            "type": 3,
-            "api": "./tvbox/api/drpy2.min.js",
-            "searchable": 0,
-            "quickSearch": 0,
-            "playerType": 1,
-            "ext": "./tvbox/js/斗鱼直播.js"
-        },
-        {
-            "key": "聚短视频js",
-            "name": "📽┃️聚短┃视频",
-            "type": 3,
-            "api": "./tvbox/api/drpy2.min.js",
-            "searchable": 0,
-            "quickSearch": 0,
-            "ext": "./tvbox/js/短视频.js"
-        },
-        {
-            "key": "drpy_js_310直播",
-            "name": "🏀┃体育┃直播",
-            "type": 3,
-            "api": "./tvbox/api/drpy2.min.js",
-            "changeable": 0,
-            "gridview": 3,
-            "style": {
-                "type": "list"
-            },
-            "ext": "./tvbox/js/310直播.js"
-        },
-        {
             "key": "米搜",
             "name": "🌖┃米搜┃网盘",
             "type": 3,
@@ -381,6 +246,7 @@
     "lives": [
         {
             "name": "itvlist",
+            "epg": "https://live.fanmingming.com/e.xml",
             "url": "./itvlist.m3u",
             "type":0,
            "playerType": 2,
@@ -389,6 +255,7 @@
         {
             "name": "filitv",
             "url": "./filitv.m3u",
+            "epg": "https://live.fanmingming.com/e.xml",
             "type":0,
              "playerType": 2,
             "timeout": 3
