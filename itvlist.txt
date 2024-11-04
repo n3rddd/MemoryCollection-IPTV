@@ -555,5 +555,5 @@ CHC高清电影,http://171.116.226.246:8082/rtp/226.0.2.93:8004,0.92
 都市剧场,http://175.173.204.245:9006/rtp/232.0.0.149:1234,2.39
 都市剧场,http://175.150.152.34:9020/rtp/232.0.0.149:1234,2.15
 
-11-04-13,#genre#:
-11-04-13,https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/TB/mv.mp4
+11-04-14,#genre#:
+11-04-14,https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/TB/mv.mp4

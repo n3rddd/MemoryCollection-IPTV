@@ -380,6 +380,20 @@ def group_and_sort_channels(channels):
             f'#EXTINF:-1 tvg-name="{current_time_str}" group-title="{current_time_str}", {current_time_str}\n')
         m3u_file.write("https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/TB/mv.mp4\n")
 
+    # 生成 filitv.m3u 文件
+    with open('filitv.m3u', 'w', encoding='utf-8') as m3u_file:
+        m3u_file.write('#EXTM3U x-tvg-url="https://live.fanmingming.com/e.xml"\n')
+        for group_name, channel_list in overflow_groups.items():
+            for name, url, speed in channel_list:
+                m3u_file.write(
+                    f'#EXTINF:-1 tvg-name="{name}" tvg-logo="https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/TB/{name}.png" group-title="{group_name}",{name}\n')
+                m3u_file.write(f"{url}\n")  # 只写入 URL，不带速度
+
+        # 添加当前时间的频道信息到 M3U 文件
+        m3u_file.write(
+            f'#EXTINF:-1 tvg-name="{current_time_str}" group-title="{current_time_str}", {current_time_str}\n')
+        m3u_file.write("https://git.3zx.top/https://raw.githubusercontent.com/MemoryCollection/IPTV/main/TB/mv.mp4\n")
+
     print("分组后的频道信息已保存到 itvlist.txt 和 itvlist.m3u.")
     return groups
 
@@ -439,7 +453,7 @@ def main():
 
     with open('txt/itv.txt', 'w', encoding='utf-8') as file:
         for name, url, speed in results:
-            if speed >= 0.5  :  #只保存速度≥0.5的  and speed <= 1.5
+            if speed >= 0.5  and speed <= 1.5 :  #只保存速度≥0.5的
                 file.write(f"{name},{url},{speed:.2f}\n")
 
     print("已经完成测速！")
@@ -451,6 +465,7 @@ def main():
         if token:
             upload_file_to_github(token, "IPTV", "itvlist.txt")
             upload_file_to_github(token, "IPTV", "itvlist.m3u")
+            upload_file_to_github(token, "IPTV", "filitv.m3u")
             upload_file_to_github(token, "IPTV", "txt/itv.txt")
             upload_file_to_github(token, "IPTV", "itvlist.m3u", folder="txt")
 
