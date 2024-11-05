@@ -228,9 +228,13 @@ def read_channels(filename):
     return channels
 
 
-def test_download_speed(url, test_duration=3):
+import time
+import requests
+
+def test_download_speed(url, test_duration=3, speed_threshold=0.1):
     """
-    测试下载速度，固定访问时间为 test_duration 秒
+    测试下载速度，固定访问时间为 test_duration 秒，并加入速度阈值。
+    如果下载速度低于阈值，返回 0。
     """
     try:
         start_time = time.time()
@@ -250,7 +254,13 @@ def test_download_speed(url, test_duration=3):
                     break
 
         speed = downloaded / test_duration if test_duration > 0 else 0  # 使用固定的 test_duration
-        return speed / (1024 * 1024)  # 转换为 MB/s
+        speed_mb_s = speed / (1024 * 1024)  # 转换为 MB/s
+
+        # 如果下载速度低于阈值，返回 0
+        if speed_mb_s < speed_threshold:
+            return 0
+
+        return speed_mb_s
 
     except requests.RequestException:
         return 0
@@ -258,7 +268,7 @@ def test_download_speed(url, test_duration=3):
 
 def measure_download_speed_parallel(channels):
     """
-    并行测量下载速度，线程数根据 CPU 核心数自动设置
+    并行测量下载速度，线程数根据 CPU 核心数自动设置，但最少使用 4 个线程。
     """
     results = []
     queue = Queue()
@@ -267,7 +277,8 @@ def measure_download_speed_parallel(channels):
     for channel in channels:
         queue.put(channel)
 
-    max_threads = os.cpu_count() or 4  # 如果无法获取核心数，则默认使用 4 个线程
+    # 获取 CPU 核心数，确保最少使用 4 个线程
+    max_threads = max(os.cpu_count() or 4, 4)
     print(f"使用的线程数: {max_threads}")  # 打印当前线程数
 
     def worker():
@@ -412,7 +423,7 @@ def main():
 
     with open('txt/itv.txt', 'w', encoding='utf-8') as file:
         for name, url, speed in results:
-            if speed >= 0.5  :  #只保存速度≥0.5的and speed <= 1.3
+            if speed >= 0.4  :  #只保存速度≥0.5的and speed <= 1.3
                 file.write(f"{name},{url},{speed:.2f}\n")
 
     print("已经完成测速！")
@@ -429,5 +440,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
