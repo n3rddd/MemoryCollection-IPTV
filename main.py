@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 import re
-import random
 import time
 import threading
 from queue import Queue
