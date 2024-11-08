@@ -12,7 +12,6 @@ import time
 from github import Github
 
 
-
 def write_json_file(file_path, data, overwrite=False):
     """
     写入 JSON 数据到文件。
@@ -431,34 +430,64 @@ def measure_download_speed_parallel(data):
     write_json_file("data/itv.json", results, overwrite=True)
     return results
 
-def upload_file_to_github(token, repo_name, file_path, folder='', branch='main'):
+def measure_download_speed_parallel(data):
     """
-    将结果上传到 GitHub，并指定文件夹
+    并行测量多个 IP 地址下的频道下载速度，每个 IP 使用一个线程，
+    且每个线程内串行测试该 IP 下的频道。
+    空闲线程会自动获取新的任务，直到所有任务完成，确保至少有 6 个线程。
     """
-    g = Github(token)
-    repo = g.get_user().get_repo(repo_name)
-    with open(file_path, 'r', encoding='utf-8') as file:
-        content = file.read()
+    queue = Queue()
+    results = {"详情": {"ip": list(data.keys()), "iptv": sum(len(channels) for channels in data.values())}, "直播": {}}
+    
+    # 保证至少 6 个线程
+    max_threads = max(os.cpu_count() or 4, 6)
 
-    git_path = f"{folder}/{file_path.split('/')[-1]}" if folder else file_path.split('/')[-1]
+    # 将数据添加到队列中
+    for ip, channels in data.items():
+        queue.put((ip, channels))
 
-    try:
-        contents = repo.get_contents(git_path, ref=branch)
-    except:
-        contents = None
+    def worker():
+        thread_id = threading.current_thread().name  # 获取当前线程名称
+        while True:
+            try:
+                ip, channels = queue.get(timeout=1)  # 如果队列空，1秒后重试获取任务
+            except Empty:  # 如果队列空，退出线程
+                break
 
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            # 执行测速
+            channel_speeds = []
+            for index, (name, url, _) in enumerate(channels):
+                speed = test_download_speed(url)
+                speed = round(speed, 2)  # 转换速度为MB/s，并保留小数点后两位
+                channel_speeds.append([name, url, speed])  # 将测速结果添加到每个频道信息
 
-    try:
-        if contents:
-            repo.update_file(contents.path, current_time, content, contents.sha, branch=branch)
-            print("文件已更新")
-        else:
-            repo.create_file(git_path, current_time, content, branch=branch)
-            print("文件已创建")
-    except Exception as e:
-        print("文件上传失败:", e)
+                # 按线程名称格式化进度输出
+                print(
+                    f"\r线程 {thread_id} 正在测试 IP {ip} 的频道 [{index + 1}/{len(channels)}] "
+                    f"总体进度 [{len(results['直播']) + 1}/{len(data)}]", 
+                    end=""
+                )
 
+            # 将结果保存到 "直播" 字段
+            results["直播"][ip] = channel_speeds
+            queue.task_done()  # 标记任务完成
+
+    # 启动多线程
+    threads = []
+    for _ in range(max_threads):
+        thread = threading.Thread(target=worker)
+        thread.start()
+        threads.append(thread)
+
+    # 等待所有任务完成
+    queue.join()  # 阻塞主线程，直到所有任务都完成
+
+    for thread in threads:
+        thread.join()  # 等待所有线程执行完毕
+
+    # 覆盖写入文件
+    write_json_file("data/itv.json", results, overwrite=True)
+    return results
 
 if __name__ == "__main__":
 
