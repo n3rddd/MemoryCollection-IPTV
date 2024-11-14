@@ -121,7 +121,7 @@ def get_ip(area):
         for ip in ip_addresses:
             print(ip)
             ip_list.add(ip)
-    
+       print(ip_list)
     return {'ip_list': list(ip_list), 'error': None}
 
 def selenium_get_ip(area):
@@ -164,10 +164,9 @@ def selenium_get_ip(area):
 
         except Exception as e:
             print(f"Error while processing area {area_name}: {e}")
-    
-    # 关闭浏览器
-    driver.quit()
 
+    driver.quit()
+    print(ip_list)
     return {'ip_list': list(ip_list), 'error': None}
 
 def get_iptv(ip_list, output_file="data/Origfile.json", overwrite=False):
