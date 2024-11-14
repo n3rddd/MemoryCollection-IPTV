@@ -480,4 +480,3 @@ if __name__ == "__main__":
         upload_file_to_github(token, "IPTV", "itvlist.txt")
         upload_file_to_github(token, "IPTV", "itvlist.m3u")
         upload_file_to_github(token, "IPTV", "data/itv.json", folder="data")
-
