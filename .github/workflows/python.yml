@@ -30,18 +30,18 @@ jobs:
     - name: Set up Chrome
       run: |
         # 下载并安装指定版本的 Chrome 浏览器
-        wget https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.69/linux64/chrome-linux64.zip
+        wget https://storage.googleapis.com/chrome-for-testing-public/130.0.6723.91/linux64/chrome-linux64.zip
         unzip chrome-linux64.zip
         # 查看解压后的文件和目录结构，调试路径
         ls -lR chrome-linux64/
         # 将解压后的 chrome 移动到正确的位置
         sudo mv chrome-linux64 /opt/google/chrome  # 调整路径到正确位置
 
-    # 安装 ChromeDriver
+    # 安装与 Chrome 版本匹配的 ChromeDriver
     - name: Install ChromeDriver
       run: |
-        # 下载并安装与 Chrome 版本匹配的 ChromeDriver
-        wget https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.69/linux64/chromedriver-linux64.zip
+        # 下载并安装与 Chrome 130 版本匹配的 ChromeDriver
+        wget https://storage.googleapis.com/chrome-for-testing-public/130.0.6723.116/linux64/chromedriver-linux64.zip
         unzip chromedriver-linux64.zip
         # 查看解压后的文件结构，调试路径
         ls -lR chromedriver-linux64/
@@ -58,6 +58,7 @@ jobs:
       run: |
         git config --global user.name "MemoryCollection"
         git config --global user.email "csszue@gmail.com"
+        git pull origin main --rebase  # 拉取并合并远程更改
         git add .
         git commit -m "Automated file update" || echo "No changes to commit"
         git push origin main
