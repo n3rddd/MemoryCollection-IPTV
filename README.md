@@ -11,3 +11,7 @@ itvlist.txt每9个小时测速一次，使用北京服务器测速
 - FongMi  https://tv.xn--yhqu5zs87a.top/
 - 影视仓 https://wwqo.lanzouo.com/iTW1629kktlc 密码:4ofa
 ``
+### 酒店源搜索
+
+- http://tonkiang.us/?
+- http://www.foodieguide.com/iptvsearch/hoteliptv.php

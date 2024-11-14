@@ -9,6 +9,11 @@ from github import Github
 from datetime import datetime
 from bs4 import BeautifulSoup
 from queue import Queue, Empty
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def read_json_file(file_path):
     """
@@ -82,48 +87,89 @@ def get_ip(area):
     headers = {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
         "accept-language": "zh-CN,zh;q=0.9",
-        "cache-control": "max-age=0",
+        "cache-control": "no-cache",
         "content-type": "application/x-www-form-urlencoded",
+        "pragma": "no-cache",
+        "proxy-connection": "keep-alive",
         "upgrade-insecure-requests": "1",
-        "cookie": "REFERER2=Game; REFERER1=Over",
-        "Referer": "http://www.foodieguide.com/iptvsearch/hoteliptv.php",
+        "Referer": "http://tonkiang.us/hoteliptv.php",
         "Referrer-Policy": "strict-origin-when-cross-origin"
-    }
+    }    
 
-    base_url = "http://www.foodieguide.com/iptvsearch/hoteliptv.php"
-    
+    base_url = "http://tonkiang.us/hoteliptv.php"
     ip_list = set()  
 
     for area_name in area:  
         data = {
-            "e885e":area_name,
+            "0835d": area_name,
             "Submit": "+",
-            "town": "9ea5f566",
-            "ave": "KuudNuB02s",
-            "address": "grade-v-ca"
-        }    
+            "town": "9ad8c870",
+            "ave": "KuudNuB02s"
+        }
 
         try:
-            response = requests.post(base_url, headers=headers, data=data, timeout=10)
+            response = requests.post(base_url, headers=headers, data=data)
             response.raise_for_status()  
         except requests.RequestException as e:
             return {'ip_list': [], 'error': f"请求失败: {e}"}
 
         soup = BeautifulSoup(response.text, 'html.parser')
-        results = soup.find_all("div", class_="result")
-
-        for result in results:
-            ip_link = result.find("a", href=re.compile(r"hotellist\.html\?s="))
-            if ip_link:
-                ip_address = re.search(r"s=([\d.]+:\d+)", ip_link['href'])
-                if ip_address:
-                    status_div = result.find("div", style="color: crimson;")
-                    if status_div and "暂时失效" in status_div.get_text():
-                        continue  
-                    ip_list.add(ip_address.group(1))  
-    print(ip_list)
+        print(soup)
+        # 直接在源码中提取IP和端口
+        ip_addresses = re.findall(r"hotellist\.html\?s=([\d.]+:\d+)", soup.prettify())
+        print(ip_addresses)
+        for ip in ip_addresses:
+            print(ip)
+            ip_list.add(ip)
+    
     return {'ip_list': list(ip_list), 'error': None}
-  
+
+def selenium_get_ip(area):
+    # 初始化浏览器配置
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")  # 无头模式，避免打开浏览器窗口
+    driver = webdriver.Chrome(options=options)
+    
+    ip_list = set()  # 使用集合去重
+    url = "http://tonkiang.us/hoteliptv.php"
+    
+    # 访问目标网站
+    driver.get(url)
+
+    # 循环处理每个地区
+    for area_name in area:
+        try:
+            # 定位到搜索框并输入地区名称
+            search_box = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.ID, "search"))
+            )
+            search_box.clear()  # 清空输入框
+            search_box.send_keys(area_name)  # 输入地区名
+            search_box.send_keys(Keys.RETURN)  # 模拟按下 Enter 键提交
+
+            # 等待搜索结果加载完成
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.ID, "search"))  # 或者根据页面元素的变化来判断
+            )
+
+            # 获取页面源代码
+            html_content = driver.page_source
+
+            # 使用正则表达式提取 IP:端口
+            pattern = r"(\d+\.\d+\.\d+\.\d+:\d+)"
+            ip_ports = re.findall(pattern, html_content)
+
+            # 将提取到的 IP:端口加入到集合中，自动去重
+            ip_list.update(ip_ports)
+
+        except Exception as e:
+            print(f"Error while processing area {area_name}: {e}")
+    
+    # 关闭浏览器
+    driver.quit()
+
+    return {'ip_list': list(ip_list), 'error': None}
+
 def get_iptv(ip_list, output_file="data/Origfile.json", overwrite=False):
     """爬取频道信息，并返回按 IP 分组的频道数据"""
     
@@ -139,15 +185,16 @@ def get_iptv(ip_list, output_file="data/Origfile.json", overwrite=False):
             print(f"IP {ip} 无法连接，跳过爬取。")
             continue
 
-        url = f"http://www.foodieguide.com/iptvsearch/allllist.php?s={ip}&y=false"
+        url = f"http://tonkiang.us/allllist.php?s={ip}&c=false"
         headers = {
             "accept": "*/*",
             "accept-language": "zh-CN,zh;q=0.9",
             "cache-control": "no-cache",
             "pragma": "no-cache",
+            "proxy-connection": "keep-alive",
             "x-requested-with": "XMLHttpRequest",
-            "cookie": "REFERER2=Game; REFERER1=Over",
-            "Referer": "http://www.foodieguide.com/iptvsearch/hotellist.html?s={ip}",
+            "cookie": "REFERER2=Over; REFERER1=NzDbYr1aObDckO0O0O",
+            "Referer": f"http://tonkiang.us/hotellist.html?s={url}",
             "Referrer-Policy": "strict-origin-when-cross-origin"
         }
         response = requests.get(url, headers=headers)
@@ -227,7 +274,6 @@ def filter_and_process_channel_data(ip_data, output_file="data/itv.json"):
 
         write_json_file("data/itv.json",processed_data, True)  
         
-        print(f"处理结果已保存到 {output_file}")
         return processed_data
 
     except Exception as e:
@@ -422,9 +468,9 @@ def upload_file_to_github(token, repo_name, file_path, folder='', branch='main')
 if __name__ == "__main__":
 
     ip_data = read_json_file("data/itv.json")
-    if int(ip_data["详情"]["iptv"]) < 600:
+    if int(ip_data["详情"]["iptv"]) < 14600:
         area = ["北京", "辽宁"]
-        get_iptv(get_ip(area)["ip_list"])
+        get_iptv(selenium_get_ip(area)["ip_list"])
         filter_and_process_channel_data(read_json_file("data/Origfile.json"))
     iptv_data = read_json_file("data/itv.json")
     results = measure_download_speed_parallel(iptv_data["直播"])

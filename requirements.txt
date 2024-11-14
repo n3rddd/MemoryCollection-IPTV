@@ -1,3 +1,4 @@
 requests
+github
 beautifulsoup4
-PyGithub
+selenium
