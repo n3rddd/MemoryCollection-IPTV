@@ -468,7 +468,7 @@ def upload_file_to_github(token, repo_name, file_path, folder='', branch='main')
 if __name__ == "__main__":
 
     ip_data = read_json_file("data/itv.json")
-    if int(ip_data["详情"]["iptv"]) < 14600:
+    if int(ip_data["详情"]["iptv"]) < 600:
         area = ["北京", "辽宁","上海"]
         get_iptv(selenium_get_ip(area)["ip_list"])
         filter_and_process_channel_data(read_json_file("data/Origfile.json"))
