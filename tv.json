@@ -245,14 +245,6 @@
 
     "lives": [
         {
-            "name": "txt",
-            "epg": "https://live.fanmingming.com/e.xml",
-            "url": "./itvlist.txt",
-            "type":0,
-            "playerType": 2,
-            "timeout": 3
-        },
-        {
             "name": "m3u",
             "url": "./itvlist.m3u",
             "epg": "https://live.fanmingming.com/e.xml",
