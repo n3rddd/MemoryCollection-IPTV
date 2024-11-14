@@ -1,12 +1,9 @@
 name: Python CI with GitHub Actions
 
 on:
-  # 手动触发
-  workflow_dispatch:
-
-  # 每 8 小时触发一次
+  workflow_dispatch:  # 手动触发
   schedule:
-    - cron: '0 */8 * * *'  # 每 8 小时执行一次，UTC 时间
+    - cron: '0 */8 * * *'  # 每 8 小时执行一次
 
 jobs:
   build:
@@ -21,13 +18,25 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.9'  # 可以根据需要修改 Python 版本
+        python-version: '3.9'
 
     # 安装依赖
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r requirements.txt  # 安装所有依赖
+
+    # 安装 Chrome 和 ChromeDriver
+    - name: Set up Chrome
+      uses: browser-actions/setup-chrome@v1
+      with:
+        chrome-version: 'latest'  # 安装最新版本的 Chrome
+
+    - name: Install ChromeDriver
+      run: |
+        wget https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip  # 下载 ChromeDriver
+        unzip chromedriver_linux64.zip  # 解压缩
+        sudo mv chromedriver /usr/local/bin/  # 移动到 /usr/local/bin/ 以便 Selenium 使用
 
     # 运行 main.py 脚本
     - name: Run main.py script
@@ -43,4 +52,4 @@ jobs:
         git commit -m "Automated file update" || echo "No changes to commit"
         git push origin main
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub 会自动提供 GITHUB_TOKEN
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
