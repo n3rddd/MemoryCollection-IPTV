@@ -28,15 +28,18 @@ jobs:
 
     # 安装 Chrome 和 ChromeDriver
     - name: Set up Chrome
-      uses: browser-actions/setup-chrome@v1
-      with:
-        chrome-version: 'latest'  # 安装最新版本的 Chrome
+      run: |
+        # 下载并安装指定版本的 Chrome 浏览器（headless shell）
+        wget https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.69/linux64/chrome-headless-shell-linux64.zip
+        unzip chrome-headless-shell-linux64.zip
+        sudo mv chrome-linux64 /opt/google/chrome  # 移动到系统目录
 
     - name: Install ChromeDriver
       run: |
-        wget https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip  # 下载 ChromeDriver
-        unzip chromedriver_linux64.zip  # 解压缩
-        sudo mv chromedriver /usr/local/bin/  # 移动到 /usr/local/bin/ 以便 Selenium 使用
+        # 下载并安装与 Chrome 版本匹配的 ChromeDriver
+        wget https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.69/linux64/chromedriver-linux64.zip
+        unzip chromedriver-linux64.zip
+        sudo mv chromedriver /usr/local/bin/  # 移动到 bin 目录
 
     # 运行 main.py 脚本
     - name: Run main.py script
