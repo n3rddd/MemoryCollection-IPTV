@@ -26,20 +26,24 @@ jobs:
         pip install --upgrade pip
         pip install -r requirements.txt  # 安装所有依赖
 
-    # 安装 Chrome 和 ChromeDriver
+    # 安装 Chrome 浏览器
     - name: Set up Chrome
       run: |
-        # 下载并安装指定版本的 Chrome 浏览器（headless shell）
-        wget https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.69/linux64/chrome-headless-shell-linux64.zip
-        unzip chrome-headless-shell-linux64.zip
-        sudo mv chrome-linux64 /opt/google/chrome  # 移动到系统目录
+        # 下载并安装指定版本的 Chrome 浏览器
+        wget https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.69/linux64/chrome-linux64.zip
+        unzip chrome-linux64.zip
+        # 查看解压后的文件和目录结构，调试路径
+        ls -lR chrome-linux64/
+        # 将解压后的 chrome 移动到正确的位置
+        sudo mv chrome-linux64 /opt/google/chrome  # 调整路径到正确位置
 
+    # 安装 ChromeDriver
     - name: Install ChromeDriver
       run: |
         # 下载并安装与 Chrome 版本匹配的 ChromeDriver
         wget https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.69/linux64/chromedriver-linux64.zip
         unzip chromedriver-linux64.zip
-        sudo mv chromedriver /usr/local/bin/  # 移动到 bin 目录
+        sudo mv chromedriver /usr/local/bin/  # 将 ChromeDriver 移动到 bin 目录
 
     # 运行 main.py 脚本
     - name: Run main.py script
