@@ -121,7 +121,7 @@ def get_ip(area):
         for ip in ip_addresses:
             print(ip)
             ip_list.add(ip)
-       print(ip_list)
+    print(ip_list)
     return {'ip_list': list(ip_list), 'error': None}
 
 def selenium_get_ip(area):
