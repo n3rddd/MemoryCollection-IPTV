@@ -469,7 +469,7 @@ if __name__ == "__main__":
 
     ip_data = read_json_file("data/itv.json")
     if int(ip_data["详情"]["iptv"]) < 14600:
-        area = ["北京", "辽宁"]
+        area = ["北京", "辽宁","上海"]
         get_iptv(selenium_get_ip(area)["ip_list"])
         filter_and_process_channel_data(read_json_file("data/Origfile.json"))
     iptv_data = read_json_file("data/itv.json")
