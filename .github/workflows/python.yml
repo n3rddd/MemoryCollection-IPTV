@@ -43,7 +43,10 @@ jobs:
         # 下载并安装与 Chrome 版本匹配的 ChromeDriver
         wget https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.69/linux64/chromedriver-linux64.zip
         unzip chromedriver-linux64.zip
-        sudo mv chromedriver /usr/local/bin/  # 将 ChromeDriver 移动到 bin 目录
+        # 查看解压后的文件结构，调试路径
+        ls -lR chromedriver-linux64/
+        # 移动 chromedriver 到正确的位置
+        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
 
     # 运行 main.py 脚本
     - name: Run main.py script
