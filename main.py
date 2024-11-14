@@ -95,7 +95,13 @@ def get_ip(area):
     ip_list = set()  
 
     for area_name in area:  
-        data = {"saerch": area_name, "Submit": "+", "names": "Tom", "city": "HeZhou", "address": "Ca94122"}
+        data = {
+            "e885e":area_name,
+            "Submit": "+",
+            "town": "9ea5f566",
+            "ave": "KuudNuB02s",
+            "address": "grade-v-ca"
+        }    
 
         try:
             response = requests.post(base_url, headers=headers, data=data, timeout=10)
@@ -115,7 +121,7 @@ def get_ip(area):
                     if status_div and "暂时失效" in status_div.get_text():
                         continue  
                     ip_list.add(ip_address.group(1))  
-    
+    print(ip_list)
     return {'ip_list': list(ip_list), 'error': None}
   
 def get_iptv(ip_list, output_file="data/Origfile.json", overwrite=False):
@@ -137,11 +143,13 @@ def get_iptv(ip_list, output_file="data/Origfile.json", overwrite=False):
         headers = {
             "accept": "*/*",
             "accept-language": "zh-CN,zh;q=0.9",
+            "cache-control": "no-cache",
+            "pragma": "no-cache",
             "x-requested-with": "XMLHttpRequest",
-            "Referer": f"http://www.foodieguide.com/iptvsearch/hotellist.html?s={ip}",
+            "cookie": "REFERER2=Game; REFERER1=Over",
+            "Referer": "http://www.foodieguide.com/iptvsearch/hotellist.html?s={ip}",
             "Referrer-Policy": "strict-origin-when-cross-origin"
         }
-
         response = requests.get(url, headers=headers)
         channels = []
 
