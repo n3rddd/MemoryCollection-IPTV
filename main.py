@@ -481,25 +481,3 @@ if __name__ == "__main__":
         upload_file_to_github(token, "IPTV", "itvlist.m3u")
         upload_file_to_github(token, "IPTV", "data/itv.json", folder="data")
 
-
-# json 保存数据格式
-# {
-#     "详情": {
-#         "iptv": 6,
-#         "ip": ["117.72.36.109:9099", "59.47.118.242:801", "60.16.18.243:4949"]
-#     },
-#     "直播": {
-#         "117.72.36.109:9099": [
-#             ["CCTV2", "http://cdnzxrrs.gz.chinamobile.com:6060/PLTV/88888888/224/3221225706/10000100000000060000000000146027_0.smil/index.m3u8", 0],
-#             ["CCTV3", "http://39.135.16.142:6060/PLTV/88888888/224/3221226008/372609400.smil/index.m3u8", 0]
-#         ],
-#         "59.47.118.242:801": [
-#             ["CCTV1", "http://udp://239.3.3.72:10001", 0],
-#             ["CCTV1", "http://59.47.118.242:801/hls/72/index.m3u8", 0]
-#         ],
-#         "60.16.18.243:4949": [
-#             ["CCTV1", "http://hls/1/index.m3u8", 0],
-#             ["CCTV2", "http://hls/2/index.m3u8", 0]
-#         ]
-#     }
-# }
