@@ -351,7 +351,7 @@ def group_and_sort_channels(data):
 
     with open('itvlist.txt', 'w', encoding='utf-8') as file:
         for group_name, channel_list in groups.items():
-            file.write(f"{group_name}:\n")
+            file.write(f"{group_name},#genre#\n")
             for name, url, speed in channel_list:
                 file.write(f"{name},{url},{speed}\n")
             file.write("\n") 
