@@ -358,7 +358,7 @@ def group_and_sort_channels(data):
 
         current_time_str = datetime.now().strftime("%m-%d-%H")
         file.write(
-            f"{current_time_str},#genre#:\n{current_time_str},https://raw.3zx.top/MemoryCollection/IPTV/main/TB/mv.mp4\n"
+            f"{current_time_str},#genre#:\n{current_time_str},https://raw.gitmirror.com/MemoryCollection/IPTV/main/TB/mv.mp4\n"
         )
 
     with open('itvlist.m3u', 'w', encoding='utf-8') as m3u_file:
@@ -366,13 +366,13 @@ def group_and_sort_channels(data):
         for group_name, channel_list in groups.items():
             for name, url, speed in channel_list:
                 m3u_file.write(
-                    f'#EXTINF:-1 tvg-name="{name}" tvg-logo="https://raw.3zx.top/MemoryCollection/IPTV/main/TB/{name}.png" group-title="{group_name}",{name}\n'
+                    f'#EXTINF:-1 tvg-name="{name}" tvg-logo="https://raw.gitmirror.com/MemoryCollection/IPTV/main/TB/{name}.png" group-title="{group_name}",{name}\n'
                 )
                 m3u_file.write(f"{url}\n") 
         m3u_file.write(
             f'#EXTINF:-1 tvg-name="{current_time_str}" group-title="{current_time_str}", {current_time_str}\n'
         )
-        m3u_file.write("https://raw.3zx.top/MemoryCollection/IPTV/main/TB/mv.mp4\n")
+        m3u_file.write("https://raw.gitmirror.com/MemoryCollection/IPTV/main/TB/mv.mp4\n")
 
     print("分组后的频道信息已保存到 itvlist.txt 和 itvlist.m3u.")
     return groups

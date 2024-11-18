@@ -2,10 +2,13 @@ itvlist.txt每9个小时测速一次，使用北京服务器测速
 
 个人使用效果还不错。
 
+那个煞笔刷我流量
+![alt text](TB/image.png)
+
 ### 电视直播
-    https://raw.3zx.top/MemoryCollection/IPTV/main/itvlist.txt
+    https://raw.gitmirror.comMemoryCollection/IPTV/main/itvlist.txt
 ### tvbox接口
-    https://raw.3zx.top/MemoryCollection/IPTV/main/tv.json
+    https://raw.gitmirror.comMemoryCollection/IPTV/main/tv.json
 
 ### 壳子
 - FongMi  https://tv.xn--yhqu5zs87a.top/
