@@ -377,13 +377,14 @@ def group_and_sort_channels(data):
     print("分组后的频道信息已保存到 itvlist.txt 和 itvlist.m3u.")
     return groups
 
-def measure_download_speed_parallel(data,MinSpeed = 0.3):
+def measure_download_speed_parallel(data,MinSpeed = 0.3,Vmax = 1.4):
     """
     并行测量多个 IP 地址下的频道下载速度，
     每个 IP 使用一个线程，且每个线程内串行测试该 IP 下的频道。
     在测试频道速度之前，首先检查 IP 地址和端口是否可连接，
     如果无法连接，则跳过该 IP 地址的测速。
     MinSpeed 是最小速度。
+    Vmax 是最小速度。
     """
     queue = Queue()
     results = {"详情": {"iptv": sum(len(channels) for channels in data.values()), "ip": list(data.keys())}, "直播": {}}
@@ -412,7 +413,7 @@ def measure_download_speed_parallel(data,MinSpeed = 0.3):
                 speed = test_download_speed(url)
                 speed = round(speed, 2)
             
-                if speed > MinSpeed:
+                if speed > MinSpeed and speed <Vmax:
                     channel_speeds.append([name, url, speed]) 
 
                     print(f"\r线程 {thread_id} 正在测试 IP {ip} 的频道 [{index + 1}/{len(channels)}] "
