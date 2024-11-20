@@ -5,6 +5,7 @@ import time
 import socket
 import requests
 import threading
+import http.client
 from github import Github
 from datetime import datetime
 from bs4 import BeautifulSoup
@@ -14,6 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
 
 def read_json_file(file_path):
     """
@@ -74,55 +76,19 @@ def write_json_file(file_path, data, overwrite=False):
             print(f"追加写入文件失败: {e}")
 
 def check_ip_port(ip_port):
-    """检查 IP 和端口是否可连接，返回 True 表示可用，False 表示不可用。"""
+    """检查 IP 和端口是否可连接，并尝试访问 /status/，返回 True 表示可用，False 表示不可用。"""
     ip, port = ip_port.split(":")
     try:
-        with socket.create_connection((ip, int(port)), timeout=5):
+        conn = http.client.HTTPConnection(ip, int(port), timeout=5)
+        conn.request("GET", "/status/")
+        response = conn.getresponse()
+        if response.status == 200:
             return True
-    except (socket.timeout, socket.error):
+    except (socket.timeout, socket.error, http.client.HTTPException):
         return False
-
-def get_ip(area):
-    """爬取指定地区的IP地址"""
-    headers = {
-        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-        "accept-language": "zh-CN,zh;q=0.9",
-        "cache-control": "no-cache",
-        "content-type": "application/x-www-form-urlencoded",
-        "pragma": "no-cache",
-        "proxy-connection": "keep-alive",
-        "upgrade-insecure-requests": "1",
-        "Referer": "http://tonkiang.us/hoteliptv.php",
-        "Referrer-Policy": "strict-origin-when-cross-origin"
-    }    
-
-    base_url = "http://tonkiang.us/hoteliptv.php"
-    ip_list = set()  
-
-    for area_name in area:  
-        data = {
-            "0835d": area_name,
-            "Submit": "+",
-            "town": "9ad8c870",
-            "ave": "KuudNuB02s"
-        }
-
-        try:
-            response = requests.post(base_url, headers=headers, data=data)
-            response.raise_for_status()  
-        except requests.RequestException as e:
-            return {'ip_list': [], 'error': f"请求失败: {e}"}
-
-        soup = BeautifulSoup(response.text, 'html.parser')
-        print(soup)
-        # 直接在源码中提取IP和端口
-        ip_addresses = re.findall(r"hotellist\.html\?s=([\d.]+:\d+)", soup.prettify())
-        print(ip_addresses)
-        for ip in ip_addresses:
-            print(ip)
-            ip_list.add(ip)
-    print(ip_list)
-    return {'ip_list': list(ip_list), 'error': None}
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
 def selenium_get_ip(area):
     # 初始化浏览器配置
@@ -309,25 +275,81 @@ def test_download_speed(url, test_duration=3):
     except requests.RequestException:
         return 0
 
-def measure_speed_for_ip(ip, channels):
+def measure_download_speed_parallel(data, MinSpeed=0.3, Vmax=1.4):
     """
-    针对单个 IP 地址下的所有频道进行串行测速。
+    并行测量多个 IP 地址下的频道下载速度，
+    每个 IP 使用一个线程，且每个线程内串行测试该 IP 下的频道。
+    在测试频道速度之前，首先检查 IP 地址和端口是否可连接，
+    如果无法连接，则跳过该 IP 地址的测速。
+    MinSpeed 是最小速度。
+    Vmax 是最大速度。
     """
-    results = []
-    for index, channel in enumerate(channels):
-        name, url, _ = channel
-        speed = test_download_speed(url)
-        results.append((name, url, speed))
-        print(f"\r正在测试 IP {ip} 的频道 [{index + 1}/{len(channels)}]", end="")
-    print(f"\n完成 IP {ip} 的测速")
-    return ip, results
+    queue = Queue()
+    results = {"详情": {"iptv": sum(len(channels) for channels in data.values()), "ip": list(data.keys())}, "直播": {}}
+
+    total_channels = results["详情"]["iptv"]  # 统计总频道数
+    completed_channels = 0  # 记录已完成的频道数
+
+    # 保证至少 6 个线程
+    max_threads = max(os.cpu_count() or 4, 6)
+
+    for ip, channels in data.items():
+        queue.put((ip, channels))
+
+    def worker():
+        nonlocal completed_channels
+        thread_id = threading.current_thread().name
+        while True:
+            try:
+                ip, channels = queue.get(timeout=1)
+            except Empty:
+                break
+
+            if not check_ip_port(ip):
+                print(f"\r线程 {thread_id}: IP {ip} 端口无法连接，跳过测速", end="")
+                queue.task_done()
+                continue
+
+            channel_speeds = []
+            for index, (name, url, _) in enumerate(channels):
+                speed = test_download_speed(url)
+                speed = round(speed, 2)
+
+                if speed > MinSpeed and speed < Vmax:
+                    channel_speeds.append([name, url, speed])
+
+                    # 更新已完成的频道数
+                completed_channels += 1
+
+                # 每完成 100 个频道，打印进度百分比
+                if completed_channels % 100 == 0 or completed_channels == total_channels:
+                    percent_complete = (completed_channels / total_channels) * 100
+                    print(f"\r总体进度: {percent_complete:.2f}% ({completed_channels}/{total_channels})", end="")
+
+            if channel_speeds:
+                results["直播"][ip] = channel_speeds
+            queue.task_done()
+
+    threads = []
+    for _ in range(max_threads):
+        thread = threading.Thread(target=worker)
+        thread.start()
+        threads.append(thread)
+
+    queue.join()
+
+    for thread in threads:
+        thread.join()
+
+    write_json_file("data/itv.json", results, overwrite=True)
+    return results
 
 def natural_key(string):
     """自然排序的辅助函数"""
     return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', string)]
 
 def group_and_sort_channels(data):
-    """根据规则分组并排序频道信息，并保存到 itvlist.txt 和 itvlist.m3u"""
+    """根据规则分组并排序频道信息，并保存到 itvlist.txt"""
     channels = []
     for ip, channel_list in data["直播"].items():
         channels.extend(channel_list)
@@ -354,88 +376,15 @@ def group_and_sort_channels(data):
             file.write(f"{group_name},#genre#\n")
             for name, url, speed in channel_list:
                 file.write(f"{name},{url},{speed}\n")
-            file.write("\n") 
+            file.write("\n")
 
         current_time_str = datetime.now().strftime("%m-%d-%H")
         file.write(
             f"{current_time_str},#genre#:\n{current_time_str},https://raw.gitmirror.com/MemoryCollection/IPTV/main/TB/mv.mp4\n"
         )
 
-    with open('itvlist.m3u', 'w', encoding='utf-8') as m3u_file:
-        m3u_file.write('#EXTM3U x-tvg-url="https://live.fanmingming.com/e.xml"\n')
-        for group_name, channel_list in groups.items():
-            for name, url, speed in channel_list:
-                m3u_file.write(
-                    f'#EXTINF:-1 tvg-name="{name}" tvg-logo="https://raw.gitmirror.com/MemoryCollection/IPTV/main/TB/{name}.png" group-title="{group_name}",{name}\n'
-                )
-                m3u_file.write(f"{url}\n") 
-        m3u_file.write(
-            f'#EXTINF:-1 tvg-name="{current_time_str}" group-title="{current_time_str}", {current_time_str}\n'
-        )
-        m3u_file.write("https://raw.gitmirror.com/MemoryCollection/IPTV/main/TB/mv.mp4\n")
-
-    print("分组后的频道信息已保存到 itvlist.txt 和 itvlist.m3u.")
+    print("分组后的频道信息已保存到 itvlist.txt ")
     return groups
-
-def measure_download_speed_parallel(data,MinSpeed = 0.3,Vmax = 1.4):
-    """
-    并行测量多个 IP 地址下的频道下载速度，
-    每个 IP 使用一个线程，且每个线程内串行测试该 IP 下的频道。
-    在测试频道速度之前，首先检查 IP 地址和端口是否可连接，
-    如果无法连接，则跳过该 IP 地址的测速。
-    MinSpeed 是最小速度。
-    Vmax 是最小速度。
-    """
-    queue = Queue()
-    results = {"详情": {"iptv": sum(len(channels) for channels in data.values()), "ip": list(data.keys())}, "直播": {}}
-    
-    # 保证至少 6 个线程
-    max_threads = max(os.cpu_count() or 4, 6)
-
-    for ip, channels in data.items():
-        queue.put((ip, channels))
-
-    def worker():
-        thread_id = threading.current_thread().name  
-        while True:
-            try:
-                ip, channels = queue.get(timeout=1) 
-            except Empty:  
-                break
-
-            if not check_ip_port(ip):
-                print(f"\r线程 {thread_id}: IP {ip} 端口无法连接，跳过测速", end="")
-                queue.task_done()  
-                continue   
-
-            channel_speeds = []
-            for index, (name, url, _) in enumerate(channels):
-                speed = test_download_speed(url)
-                speed = round(speed, 2)
-            
-                if speed > MinSpeed and speed <Vmax:
-                    channel_speeds.append([name, url, speed]) 
-
-                    print(f"\r线程 {thread_id} 正在测试 IP {ip} 的频道 [{index + 1}/{len(channels)}] "
-                          f"总体进度 [{len(results['直播']) + 1}/{len(data)}]", end="")
-
-            if channel_speeds:
-                results["直播"][ip] = channel_speeds
-            queue.task_done()
-
-    threads = []
-    for _ in range(max_threads):
-        thread = threading.Thread(target=worker)
-        thread.start()
-        threads.append(thread)
-
-    queue.join() 
-
-    for thread in threads:
-        thread.join() 
-
-    write_json_file("data/itv.json", results, overwrite=True)
-    return results
 
 def upload_file_to_github(token, repo_name, file_path, folder='', branch='main'):
     """
@@ -465,6 +414,7 @@ def upload_file_to_github(token, repo_name, file_path, folder='', branch='main')
     except Exception as e:
         print("文件上传失败:", e)
 
+
 if __name__ == "__main__":
 
     ip_data = read_json_file("data/itv.json")
@@ -478,5 +428,4 @@ if __name__ == "__main__":
     token = os.getenv("GITHUB_TOKEN")
     if token:
         upload_file_to_github(token, "IPTV", "itvlist.txt")
-        upload_file_to_github(token, "IPTV", "itvlist.m3u")
         upload_file_to_github(token, "IPTV", "data/itv.json", folder="data")

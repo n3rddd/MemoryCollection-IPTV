@@ -242,14 +242,13 @@
             "ext": "./tvbox/json/bilibili.json"
         }
     ],
-
     "lives": [
         {
-            "name": "m3u",
-            "url": "./itvlist.m3u",
+            "name": "txt",
+            "url": "./itvlist.txt",
             "epg": "https://live.fanmingming.com/e.xml",
-            "type":0,
             "playerType": 2,
+            "type": 2,
             "timeout": 3
         }
     ]
