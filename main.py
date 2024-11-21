@@ -93,7 +93,7 @@ def check_ip_port(ip_port):
 def selenium_get_ip(area, page_number=0):
     # 初始化浏览器配置
     options = webdriver.ChromeOptions()
-   # options.add_argument("--headless")  # 无头模式，避免打开浏览器窗口
+    options.add_argument("--headless")  # 无头模式，避免打开浏览器窗口
     options.add_argument(
         '--host-resolver-rules=MAP *.googlesyndication.com 127.0.0.1,' 
         'MAP *.googletagmanager.com 127.0.0.1,' 
