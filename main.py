@@ -15,6 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import random
 
 
 def read_json_file(file_path):
@@ -100,6 +101,11 @@ def selenium_get_ip(area, page_number=0):
         'MAP *.histats.com 127.0.0.1,' 
         'MAP *.2mdn-cn.net 127.0.0.1'
     )
+    options.add_argument('--no-sandbox')  # 禁用沙箱
+    options.add_argument('--disable-dev-shm-usage')  # 禁用 /dev/shm 使用
+    options.add_argument('--disable-gpu')  # 禁用 GPU 加速
+    options.add_argument('--remote-debugging-port=9222')  # 使 DevTools 可用
+    options.add_argument('--disable-software-rasterizer')  # 禁用软件光栅化
     driver = webdriver.Chrome(options=options)
 
     ip_list = set()  # 使用集合去重
