@@ -16,8 +16,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import random
-import asyncio
-import aiohttp
 
 def read_json_file(file_path):
     """
