@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="spider">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/tvbox/spider.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

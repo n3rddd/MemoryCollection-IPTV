@@ -16,7 +16,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import random
-
+import asyncio
+import aiohttp
 
 def read_json_file(file_path):
     """
@@ -335,10 +336,19 @@ def measure_download_speed_parallel(data, MinSpeed=0.3, Vmax=1.4):
     total_channels = results["详情"]["iptv"]  # 统计总频道数
     completed_channels = 0  # 记录已完成的频道数
 
-    # 保证至少 6 个线程
-    max_threads = max(os.cpu_count() or 4, 6)
+    # 保证至少 8 个线程
+    max_threads = max(os.cpu_count() or 4, 8)
 
+    # 先对所有 IP 进行连接测试，筛选出可用的 IP
+    valid_ips = []
     for ip, channels in data.items():
+        if check_ip_port(ip):
+            valid_ips.append((ip, channels))
+        else:
+            print(f"IP {ip} 端口无法连接，跳过测速")
+
+    # 将可用的 IP 和频道添加到队列中
+    for ip, channels in valid_ips:
         queue.put((ip, channels))
 
     def worker():
@@ -349,11 +359,6 @@ def measure_download_speed_parallel(data, MinSpeed=0.3, Vmax=1.4):
                 ip, channels = queue.get(timeout=1)
             except Empty:
                 break
-
-            if not check_ip_port(ip):
-                print(f"\r线程 {thread_id}: IP {ip} 端口无法连接，跳过测速", end="")
-                queue.task_done()
-                continue
 
             channel_speeds = []
             for index, (name, url, _) in enumerate(channels):
@@ -388,6 +393,7 @@ def measure_download_speed_parallel(data, MinSpeed=0.3, Vmax=1.4):
 
     write_json_file("data/itv.json", results, overwrite=True)
     return results
+
 
 def natural_key(string):
     """自然排序的辅助函数"""
@@ -466,7 +472,7 @@ if __name__ == "__main__":
     if int(ip_data["详情"]["iptv"]) < 600:
         area = ["北京", "辽宁"]
         # page_number>1则进行翻页
-        get_iptv(selenium_get_ip(area,page_number=2)["ip_list"])
+        get_iptv(selenium_get_ip(area,page_number=3)["ip_list"])
         filter_and_process_channel_data(read_json_file("data/Origfile.json"))
     iptv_data = read_json_file("data/itv.json")
     results = measure_download_speed_parallel(iptv_data["直播"])
