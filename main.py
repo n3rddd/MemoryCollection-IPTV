@@ -17,6 +17,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import random
 
+
 def read_json_file(file_path):
     """
     读取 JSON 文件内容并返回字典数据。
@@ -82,8 +83,14 @@ def check_ip_port(ip_port):
         conn = http.client.HTTPConnection(ip, int(port), timeout=5)
         conn.request("GET", "/status/")
         response = conn.getresponse()
+        
+        # 检查状态码是否为 200 和网页内容中是否包含 "udpxy"
         if response.status == 200:
-            return True
+            # 读取网页内容
+            body = response.read().decode()
+            if "udpxy" in body:
+                return True
+        return False
     except (socket.timeout, socket.error, http.client.HTTPException):
         return False
     finally:
@@ -342,8 +349,6 @@ def measure_download_speed_parallel(data, MinSpeed=0.3, Vmax=1.4):
     for ip, channels in data.items():
         if check_ip_port(ip):
             valid_ips.append((ip, channels))
-        else:
-            print(f"IP {ip} 端口无法连接，跳过测速")
 
     # 将可用的 IP 和频道添加到队列中
     for ip, channels in valid_ips:
