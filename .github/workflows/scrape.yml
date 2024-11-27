@@ -1,9 +1,12 @@
 name: Run Scraping and Commit Changes
 
 on:
-  schedule:
-    - cron: '0 10 * * *'  # UTC 时间上午10点（北京时间晚上6点
-  workflow_dispatch:  # 允许手动触发
+  push:
+    branches:
+      - main  # 触发 main 分支的推送
+  pull_request:
+    branches:
+      - main  # 触发向 main 分支的拉取请求
 
 jobs:
   scrape:
@@ -29,22 +32,13 @@ jobs:
       run: |
         python main.py  # 运行爬虫脚本
 
-    - name: Check for changes in scraped data
-      id: check_changes
+    - name: Commit and push changes (unconditionally)
       run: |
-        git status  # 输出当前文件的状态，检查是否有变动
-        git diff --exit-code || echo "Changes detected"  # 如果有变化，输出 "Changes detected"
-      
-    - name: Commit and push changes
-      if: steps.check_changes.outputs.exit_code != 0  # 只有当有变化时才执行提交
-      run: |
-        git status  # 查看当前文件状态
-        git diff  # 输出文件差异，确保有变化
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "MemoryCollection"  # 设置 Git 提交的用户名
+        git config --global user.email "csszue@gmail.com"  # 设置 Git 提交的邮箱
         git add .  # 添加所有文件的变化
         git status  # 输出 git 状态，确保有文件被添加
         git commit -m "Upload scraped data" || echo "No changes to commit"  # 如果没有变化则跳过提交
-        git push || echo "No changes to push"  # 如果没有变化则跳过推送
+        git push origin main  # 强制推送到 main 分支
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 自动授权 GitHub Actions 提交代码
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub 提供的 token 进行身份认证
