@@ -1,7 +1,5 @@
-import re
 import os
 import json
-import time
 import socket
 import requests
 import threading
@@ -95,8 +93,6 @@ def check_ip_port(ip_port):
         if 'conn' in locals():
             conn.close()
 
-
-
 def playwright_get_ip(area, page_number=0):
     ip_list = set()  # 使用集合去重
     url = "http://tonkiang.us/hoteliptv.php"
@@ -166,8 +162,6 @@ def playwright_get_ip(area, page_number=0):
 
     print(ip_list)
     return {'ip_list': list(ip_list), 'error': None}
-
-
 
 def get_iptv(ip_list, output_file="data/Origfile.json", overwrite=False):
     """爬取频道信息，并返回按 IP 分组的频道数据"""
@@ -467,3 +461,97 @@ if __name__ == "__main__":
     if token:
         upload_file_to_github(token, "IPTV", "itvlist.txt")
         upload_file_to_github(token, "IPTV", "data/itv.json", folder="data")
+
+
+
+
+#
+# def selenium_get_ip(area, page_number=0):
+#     # 初始化浏览器配置
+#     options = webdriver.ChromeOptions()
+#     options.add_argument("--headless")  # 无头模式，避免打开浏览器窗口
+#     options.add_argument(
+#         '--host-resolver-rules=MAP *.googlesyndication.com 127.0.0.1,'
+#         'MAP *.googletagmanager.com 127.0.0.1,'
+#         'MAP *.histats.com 127.0.0.1,'
+#         'MAP *.2mdn-cn.net 127.0.0.1'
+#     )
+#     options.add_argument('--no-sandbox')  # 禁用沙箱
+#     options.add_argument('--disable-dev-shm-usage')  # 禁用 /dev/shm 使用
+#     options.add_argument('--disable-gpu')  # 禁用 GPU 加速
+#     options.add_argument('--remote-debugging-port=9222')  # 使 DevTools 可用
+#     options.add_argument('--disable-software-rasterizer')  # 禁用软件光栅化
+#     driver = webdriver.Chrome(options=options)
+#
+#     ip_list = set()  # 使用集合去重
+#     url = "http://tonkiang.us/hoteliptv.php"
+#
+#     # 访问目标网站
+#     driver.get(url)
+#
+#     try:
+#         # 循环处理每个地区
+#         for area_name in area:
+#             try:
+#                 # 定位到搜索框并输入地区名称
+#                 search_box = WebDriverWait(driver, 10).until(
+#                     EC.presence_of_element_located((By.ID, "search"))
+#                 )
+#                 search_box.clear()  # 清空输入框
+#                 search_box.send_keys(area_name)  # 输入地区名
+#                 search_box.send_keys(Keys.RETURN)  # 模拟按下 Enter 键提交
+#
+#                 # 等待搜索结果加载完成
+#                 WebDriverWait(driver, 10).until(
+#                     EC.presence_of_element_located((By.ID, "search"))  # 或者根据页面元素的变化来判断
+#                 )
+#
+#                 # 提取第一页的 IP 地址
+#                 html_content = driver.page_source
+#                 pattern = r"(\d+\.\d+\.\d+\.\d+:\d+)"
+#                 ip_ports = re.findall(pattern, html_content)
+#                 ip_list.update(ip_ports)  # 将提取到的 IP:端口加入到集合中，自动去重
+#
+#                 # 处理分页（如果页数大于1）
+#                 if page_number > 1:
+#                     for page in range(2, page_number + 1):  # 从第 2 页开始
+#                         try:
+#                             print(f"尝试获取第 {page} 页的翻页按钮...")
+#
+#                             # 更新 XPath，按区域和页面匹配 href
+#                             # 这里直接传入 area_name 作为字符串
+#                             page_button = WebDriverWait(driver, 15).until(
+#                                 EC.presence_of_element_located(
+#                                     (By.XPATH, f"//a[contains(@href, '?page={page}&iphone={area_name}')]"))
+#                             )
+#                             print(f"找到第 {page} 页的翻页按钮，正在点击...")
+#                             page_button.click()  # 点击页码链接
+#
+#                             delay = random.uniform(2, 5)  # 随机延时
+#                             print(f"等待 {delay:.2f} 秒")
+#                             time.sleep(delay)
+#
+#                             # 等待新页面加载并检测内容变化
+#                             WebDriverWait(driver, 10).until(
+#                                 EC.presence_of_all_elements_located((By.CLASS_NAME, "result"))
+#                             )
+#
+#                             # 获取并提取新页面的 IP 地址
+#                             html_content = driver.page_source
+#                             ip_ports = re.findall(pattern, html_content)
+#                             ip_list.update(ip_ports)  # 将提取到的 IP:端口加入到集合中，自动去重
+#                             print(f"第 {page} 页提取的 IP 地址：", ip_ports)
+#
+#                         except Exception as e:
+#                             print(f"处理第 {page} 页时发生错误: {e}")
+#                             break  # 出现问题停止处理分页
+#
+#             except Exception as e:
+#                 print(f"Error while processing area {area_name}: {e}")
+#
+#     finally:
+#         driver.quit()
+#
+#     print(ip_list)
+#     return {'ip_list': list(ip_list), 'error': None}
+#
