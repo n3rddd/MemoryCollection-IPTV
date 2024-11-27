@@ -6,9 +6,9 @@ itvlist.txt每9个小时测速一次，使用北京服务器测速
 ![alt text](TB/image.png)
 
 ### 电视直播
-    https://raw.gitmirror.comMemoryCollection/IPTV/main/itvlist.txt
+    https://raw.gitmirror.com/MemoryCollection/IPTV/main/itvlist.txt
 ### tvbox接口
-    https://raw.gitmirror.comMemoryCollection/IPTV/main/tv.json
+    https://raw.gitmirror.com/MemoryCollection/IPTV/main/tv.json
 
 ### 壳子
 - FongMi  https://tv.xn--yhqu5zs87a.top/

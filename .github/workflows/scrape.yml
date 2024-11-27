@@ -1,0 +1,57 @@
+name: Run Scraping and Commit Changes
+
+on:
+  # 当main分支的main.py文件发生更改时被触发
+  push:
+    branches:
+      - main
+    paths:
+      - 'main.py'
+  # 当向main分支发送拉取请求，且该请求中包含对main.py的更改时被触发
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'main.py'
+  # 添加一个手动触发的工作流调度
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest  # 使用 Ubuntu 最新版本的 GitHub Runner
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2  # 克隆仓库
+
+    - name: Set up Python environment
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'  # 可以根据需要选择合适的 Python 版本
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install --no-cache-dir -r requirements.txt
+        pip install --no-cache-dir selenium
+
+    - name: Run the scraper
+      run: |
+        python main.py  # 运行爬虫脚本
+
+    - name: Check for changes in scraped data
+      id: check_changes
+      run: |
+        # 检查根目录和 data 目录下的文件是否有变动
+        git diff --exit-code || echo "Changes detected"  # 如果有变化，输出 "Changes detected"
+
+    - name: Commit and push changes
+      if: steps.check_changes.outputs.exit_code != 0  # 只有当有变化时才执行提交
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add .  # 添加所有文件的变化
+        git commit -m "Upload scraped data"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 自动授权 GitHub Actions 提交代码
