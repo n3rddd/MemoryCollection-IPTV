@@ -32,9 +32,19 @@ jobs:
       run: |
         git config --global user.name "MemoryCollection"  # 设置 Git 提交的用户名
         git config --global user.email "csszue@gmail.com"  # 设置 Git 提交的邮箱
+        
+        # 拉取远程仓库的更新并合并
+        git pull origin main --rebase  # 使用 --rebase 避免合并提交，保持提交历史整洁
+        
+        # 添加文件
         git add .  # 添加所有文件的变化
         git status  # 输出 git 状态，确保有文件被添加
+        
+        # 提交文件（如果有更改）
         git commit -m "Upload scraped data" || echo "No changes to commit"  # 如果没有变化则跳过提交
+        
+        # 推送更改到远程仓库
         git push origin main  # 强制推送到 main 分支
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub 提供的 token 进行身份认证
+
