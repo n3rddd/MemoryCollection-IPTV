@@ -1,5 +1,0 @@
-requests
-PyGithub
-beautifulsoup4
-Playwright
-aiohttp
