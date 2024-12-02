@@ -9,6 +9,7 @@ import requests
 import aiohttp
 from datetime import timedelta
 
+
 def should_run():
     time_file_path = 'data/time.txt'
 
@@ -287,9 +288,11 @@ def group_and_sort_channels(channel_data):
             file.write("\n")
 
         # 在文件末尾添加当前时间和链接
-        current_time_str = datetime.now().strftime("%m-%d-%H")
+        current_time_str = datetime.now().strftime("%m-%d-%H+8")
+        new_time = datetime.now() + timedelta(hours=8)
+        new_time_str = new_time.strftime("%m-%d-%H")
         file.write(
-            f"{current_time_str},#genre#:\n{current_time_str},https://raw.gitmirror.com/MemoryCollection/IPTV/main/TB/mv.mp4\n"
+            f"{new_time_str},#genre#:\n{new_time_str},https://raw.gitmirror.com/MemoryCollection/IPTV/main/TB/mv.mp4\n"
         )
 
     print("分组后的频道信息已保存到 itvlist.txt ")
