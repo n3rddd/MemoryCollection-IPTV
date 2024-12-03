@@ -265,7 +265,7 @@ def group_and_sort_channels(channel_data):
                 print(f"无效数据格式：{channel_info}，跳过该频道")
                 continue
 
-            if speed < 0.1 :
+            if speed < 0.1:
                 continue  # 忽略速度小于0.1的频道
 
             # 根据名称分组
@@ -277,8 +277,13 @@ def group_and_sort_channels(channel_data):
                 groups['其他频道'].append((name, url, speed))
 
     # 对每个分组中的频道进行排序
-    for group in groups.values():
-        group.sort(key=lambda x: (natural_key(x[0]), -x[2] if x[2] is not None else float('-inf')))
+    for group_name, group in groups.items():
+        if group_name == '央视频道':
+            # 央视频道按名称自然排序，然后按速度排序
+            group.sort(key=lambda x: (natural_key(x[0]), -x[2] if x[2] is not None else float('-inf')))
+        else:
+            # 其他频道先按名称长度排序，再按自然排序，最后按速度降序
+            group.sort(key=lambda x: (len(x[0]), natural_key(x[0]), -x[2] if x[2] is not None else float('-inf')))
 
     # 将分组后的频道写入文件
     with open('itvlist.txt', 'w', encoding='utf-8') as file:
@@ -298,6 +303,7 @@ def group_and_sort_channels(channel_data):
 
     print("分组后的频道信息已保存到 itvlist.txt ")
     return groups
+
 
 
 def download_speed_test(ip_list):
