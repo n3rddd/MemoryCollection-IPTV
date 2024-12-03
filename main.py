@@ -8,6 +8,7 @@ import threading
 import requests
 import aiohttp
 from datetime import timedelta
+from github import Github
 
 
 def should_run():
@@ -378,6 +379,35 @@ def download_speed_test(ip_list):
     return filtered_channels
 
 
+def upload_file_to_github(token, repo_name, file_path, folder='', branch='main'):
+    """
+    将结果上传到 GitHub，并指定文件夹
+    """
+    g = Github(token)
+    repo = g.get_user().get_repo(repo_name)
+    with open(file_path, 'r', encoding='utf-8') as file:
+        content = file.read()
+
+    git_path = f"{folder}/{file_path.split('/')[-1]}" if folder else file_path.split('/')[-1]
+
+    try:
+        contents = repo.get_contents(git_path, ref=branch)
+    except:
+        contents = None
+
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    try:
+        if contents:
+            repo.update_file(contents.path, current_time, content, contents.sha, branch=branch)
+            print("文件已更新")
+        else:
+            repo.create_file(git_path, current_time, content, branch=branch)
+            print("文件已创建")
+    except Exception as e:
+        print("文件上传失败:", e)
+
+
 def main():
     """主程序"""
 
@@ -400,7 +430,9 @@ def main():
     ip_list = process_ip_list(ip_list)
     ip_list = download_speed_test(ip_list)
     group_and_sort_channels(ip_list)
-
+    token = os.getenv("GITHUB_TOKEN")
+    if token:
+        upload_file_to_github(token, "IPTV", "itvlist.txt")
 
 if __name__ == "__main__":
     main()
