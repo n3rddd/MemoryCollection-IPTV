@@ -305,7 +305,6 @@ def group_and_sort_channels(channel_data):
     return groups
 
 
-
 def download_speed_test(ip_list):
     # 下载文件并测量速度
     def download_file(url):
@@ -439,6 +438,7 @@ def main():
     token = os.getenv("GITHUB_TOKEN")
     if token:
         upload_file_to_github(token, "IPTV", "itvlist.txt")
+
 
 if __name__ == "__main__":
     main()
