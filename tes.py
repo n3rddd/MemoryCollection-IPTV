@@ -9,16 +9,12 @@ import requests
 import aiohttp
 from github import Github
 
-
-TIME_FILE_PATH = 'data/time.txt'   # 时间文件路径
-IPLIST_FILE_PATH = 'data/iplist.json'   # IP 列表文件路径
-GITHUB_REPO_NAME = 'IPTV'   # GitHub 仓库名
-ITVLIST_FILE_PATH = 'itvlist.txt'   # ITV 列表文件路径
-DATA_FOLDER = 'udp' # 数据文件夹
-ISP_LIST = ["联通", "电信"] # 运营商列表
-CITY_LIST = ["北京"] # 城市列表
-MIN_DOWNLOAD_SPEED = 0.5    # 最小下载速度
-
+# 常量定义
+TIME_FILE_PATH = 'data/time.txt'
+IPLIST_FILE_PATH = 'data/iplist.json'
+GITHUB_REPO_NAME = 'IPTV'
+ITVLIST_FILE_PATH = 'itvlist.txt'
+DATA_FOLDER = 'udp'
 
 def should_run():
     """判断是否需要运行程序"""
@@ -75,17 +71,17 @@ def merge_and_deduplicate(json1, json2):
         merged_json[key] = list(set(list1 + list2))
     return merged_json
 
-def get_ip(token, size=20):
+def get_ip(city_list, token, size=20):
     """根据城市和运营商信息，从 API 获取对应 IP 和端口"""
-
+    isp_list = ["联通", "电信"]
     result_data = {}
     headers = {
         "X-QuakeToken": token,
         "Content-Type": "application/json"
     }
 
-    for city in CITY_LIST:
-        for isp in ISP_LIST:
+    for city in city_list:
+        for isp in isp_list:
             print(f"正在查询城市 {city}, 运营商 {isp} 的 IP 地址...")
             query = f'((country: "china" AND app:"udpxy") AND province_cn: "{city}") AND isp: "中国{isp}"'
             data = {
@@ -215,9 +211,9 @@ def group_and_sort_channels(channel_data):
                 file.write(f"{name},{url},{speed}\n")
             file.write("\n")
 
+        current_time_str = datetime.now().strftime("%m-%d-%H+8")
         new_time = datetime.now() + timedelta(hours=8)
-        new_time_str = new_time.strftime("%m-%d %H:%M")
-
+        new_time_str = new_time.strftime("%m-%d-%H")
         file.write(f"{new_time_str},#genre#:\n{new_time_str},https://raw.gitmirror.com/MemoryCollection/IPTV/main/TB/mv.mp4\n")
 
     print("分组后的频道信息已保存到 itvlist.txt ")
@@ -284,7 +280,7 @@ def download_speed_test(ip_list):
     for ip, channels in results.items():
         for channel in channels:
             name, url, speed = channel.split(",")
-            if float(speed) >= MIN_DOWNLOAD_SPEED:
+            if float(speed) >= 0.5:
                 filtered_channels.append(channel)
 
     os.makedirs("data", exist_ok=True)
@@ -328,7 +324,8 @@ def main():
 
     if should_run():
         update_run_time()
-        ip_list = get_ip(token_360)
+        city_list = ["北京"]
+        ip_list = get_ip(city_list, token_360)
         ip_list = merge_and_deduplicate(ip_list, read_json_file(IPLIST_FILE_PATH))
     else:
         ip_list = read_json_file(IPLIST_FILE_PATH)
