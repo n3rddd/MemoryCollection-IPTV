@@ -320,7 +320,7 @@ def upload_file_to_github(token, repo_name, file_path, folder='', branch='main')
         print("文件上传失败:", e)
 
 def main():
-    token_360 = os.getenv("token_360", "bac3f26b-6dcd-494c-8d0f-bcb418b76d3b")
+    token_360 = os.getenv("token_360")
 
     if not token_360:
         print("未设置：token_360，程序无法执行")
