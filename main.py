@@ -11,26 +11,31 @@ from github import Github
 
 with open('data/config.json', 'r', encoding='utf-8') as json_file:
     config = json.load(json_file)
-IPLIST_FILE_PATH = config['IPLIST_FILE_PATH'] # IP 列表文件路径
 ISP_LIST = config['ISP_LIST'] # 运营商列表
 CITY_LIST = config['CITY_LIST'] # 城市列表
 MIN_DOWNLOAD_SPEED = config['MIN_DOWNLOAD_SPEED'] # 最小下载速度
 
 def should_run():
     """判断是否需要运行程序"""
-    if not os.path.exists("data/time.txt"):
+    if not os.path.exists("data/config.json"):
         return True
 
-    last_run_time_str = read_file("data/time.txt").strip()
-    last_run_time = datetime.strptime(last_run_time_str, '%Y-%m-%d %H:%M:%S')
-    current_time = datetime.now()
+    with open("data/config.json", 'r', encoding='utf-8') as json_file:
+        config = json.load(json_file)
+        last_run_time_str = config.get('last_run_time', '')
+        last_run_time = datetime.strptime(last_run_time_str, '%Y-%m-%d %H:%M:%S') if last_run_time_str else datetime.min
+        current_time = datetime.now()
 
     return (current_time - last_run_time) >= timedelta(days=1)
 
 def update_run_time():
     """更新上次运行时间"""
-    with open("data/time.txt", 'w') as file:
-        file.write(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    with open("data/config.json", 'r+', encoding='utf-8') as json_file:
+        config = json.load(json_file)
+        config['last_run_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        json_file.seek(0)
+        json.dump(config, json_file, ensure_ascii=False, indent=4)
+        json_file.truncate()
 
 def read_file(file_path):
     """读取文件内容"""
@@ -71,7 +76,7 @@ def merge_and_deduplicate(json1, json2):
         merged_json[key] = list(set(list1 + list2))
     return merged_json
 
-def get_ip(token, size=20):
+def get_ip(token, size=10):
     """根据城市和运营商信息，从 API 获取对应 IP 和端口"""
 
     result_data = {}
@@ -112,6 +117,7 @@ def get_ip(token, size=20):
                     print(f"城市 {city}, 运营商 {isp} 查询失败，状态码：{response.status_code}")
             except requests.exceptions.RequestException as e:
                 print(f"查询城市 {city}, 运营商 {isp} 时出错：{e}")
+            time.sleep(3)       
 
     return result_data
 
@@ -205,7 +211,7 @@ def group_and_sort_channels(channel_data):
         else:
             group.sort(key=lambda x: (len(x[0]), natural_key(x[0]), -x[2] if x[2] is not None else float('-inf')))
 
-    with open(ITVLIST_FILE_PATH, 'w', encoding='utf-8') as file:
+    with open("itvlist.txt", 'w', encoding='utf-8') as file:
         for group_name, channel_list in groups.items():
             file.write(f"{group_name},#genre#\n")
             for name, url, speed in channel_list:
@@ -221,6 +227,8 @@ def group_and_sort_channels(channel_data):
     return groups
 
 def download_speed_test(ip_list):
+    """测试下载速度并返回可用 IP 列表"""
+
     def download_file(url):
         try:
             start_time = time.time()
@@ -318,7 +326,7 @@ def upload_file_to_github(token, repo_name, file_path, folder='', branch='main')
 
 def main():
 
-    token_360 = os.getenv("token_360","不会设置变量的，在这里替换成你的360token")
+    token_360 = os.getenv("token_360")
 
     if not token_360:
         print("未设置：token_360，程序无法执行")
@@ -327,16 +335,16 @@ def main():
     if should_run():
         update_run_time()
         ip_list = get_ip(token_360)
-        ip_list = merge_and_deduplicate(ip_list, read_json_file(IPLIST_FILE_PATH))
+        ip_list = merge_and_deduplicate(ip_list, read_json_file("data/iplist.json"))
     else:
-        ip_list = read_json_file(IPLIST_FILE_PATH)
+        ip_list = read_json_file("data/iplist.json")
     ip_list = asyncio.run(test_and_get_ip_info(ip_list))
-    write_json_file(IPLIST_FILE_PATH, ip_list)
+    write_json_file("data/iplist.json", ip_list)
     ip_list = process_ip_list(ip_list)
     ip_list = download_speed_test(ip_list)
     group_and_sort_channels(ip_list)
 
-    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN","不会设置变量的，在这里替换成你的GitHub token")
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
     if GITHUB_TOKEN:
         upload_file_to_github(GITHUB_TOKEN, "IPTV", "itvlist.txt")
 
