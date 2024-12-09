@@ -8,24 +8,24 @@ import threading
 import requests
 import aiohttp
 from github import Github
+import configparser
 
 
-TIME_FILE_PATH = 'data/time.txt'   # 时间文件路径
-IPLIST_FILE_PATH = 'data/iplist.json'   # IP 列表文件路径
-GITHUB_REPO_NAME = 'IPTV'   # GitHub 仓库名
-ITVLIST_FILE_PATH = 'itvlist.txt'   # ITV 列表文件路径
-DATA_FOLDER = 'udp' # 数据文件夹
-ISP_LIST = ["联通", "电信"] # 运营商列表
-CITY_LIST = ["北京"] # 城市列表
-MIN_DOWNLOAD_SPEED = 0.5    # 最小下载速度
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+IPLIST_FILE_PATH = config.get('SETTINGS', 'IPLIST_FILE_PATH') # IP 列表文件路径
+ISP_LIST = config.get('SETTINGS', 'ISP_LIST').split(',') # 运营商列表
+CITY_LIST = config.get('SETTINGS', 'CITY_LIST').split(',') # 城市列表
+MIN_DOWNLOAD_SPEED = config.getfloat('SETTINGS', 'MIN_DOWNLOAD_SPEED') # 最小下载速度
 
 
 def should_run():
     """判断是否需要运行程序"""
-    if not os.path.exists(TIME_FILE_PATH):
+    if not os.path.exists("data/time.txt"):
         return True
 
-    last_run_time_str = read_file(TIME_FILE_PATH).strip()
+    last_run_time_str = read_file("data/time.txt").strip()
     last_run_time = datetime.strptime(last_run_time_str, '%Y-%m-%d %H:%M:%S')
     current_time = datetime.now()
 
@@ -33,7 +33,7 @@ def should_run():
 
 def update_run_time():
     """更新上次运行时间"""
-    with open(TIME_FILE_PATH, 'w') as file:
+    with open("data/time.txt", 'w') as file:
         file.write(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
 def read_file(file_path):
@@ -158,7 +158,7 @@ def process_ip_list(ip_list):
         return combined_results
 
     for province, ip_urls in ip_list.items():
-        multicast_file_path = os.path.join(DATA_FOLDER, f"{province}.txt")
+        multicast_file_path = os.path.join("udp", f"{province}.txt")
         if os.path.exists(multicast_file_path):
             with open(multicast_file_path, 'r', encoding='utf-8') as multicast_file:
                 channels = [(line.strip().split(',')[0], line.strip().split(',')[1]) for line in multicast_file if len(line.strip().split(',')) == 2]
@@ -320,7 +320,8 @@ def upload_file_to_github(token, repo_name, file_path, folder='', branch='main')
         print("文件上传失败:", e)
 
 def main():
-    token_360 = os.getenv("token_360")
+
+    token_360 = os.getenv("token_360","不会设置变量的，在这里替换成你的360token")
 
     if not token_360:
         print("未设置：token_360，程序无法执行")
@@ -338,9 +339,9 @@ def main():
     ip_list = download_speed_test(ip_list)
     group_and_sort_channels(ip_list)
 
-    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN","不会设置变量的，在这里替换成你的GitHub token")
     if GITHUB_TOKEN:
-        upload_file_to_github(GITHUB_TOKEN, GITHUB_REPO_NAME, ITVLIST_FILE_PATH)
+        upload_file_to_github(GITHUB_TOKEN, "IPTV", "itvlist.txt")
 
 if __name__ == "__main__":
     main()
