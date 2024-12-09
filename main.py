@@ -8,17 +8,13 @@ import threading
 import requests
 import aiohttp
 from github import Github
-import configparser
 
-
-config = configparser.ConfigParser()
-config.read('config.ini')
-
-IPLIST_FILE_PATH = config.get('SETTINGS', 'IPLIST_FILE_PATH') # IP 列表文件路径
-ISP_LIST = config.get('SETTINGS', 'ISP_LIST').split(',') # 运营商列表
-CITY_LIST = config.get('SETTINGS', 'CITY_LIST').split(',') # 城市列表
-MIN_DOWNLOAD_SPEED = config.getfloat('SETTINGS', 'MIN_DOWNLOAD_SPEED') # 最小下载速度
-
+with open('data/config.json', 'r', encoding='utf-8') as json_file:
+    config = json.load(json_file)
+IPLIST_FILE_PATH = config['IPLIST_FILE_PATH'] # IP 列表文件路径
+ISP_LIST = config['ISP_LIST'] # 运营商列表
+CITY_LIST = config['CITY_LIST'] # 城市列表
+MIN_DOWNLOAD_SPEED = config['MIN_DOWNLOAD_SPEED'] # 最小下载速度
 
 def should_run():
     """判断是否需要运行程序"""
@@ -111,6 +107,7 @@ def get_ip(token, size=20):
                     if urls:
                         result_data[f"{city}{isp}"] = urls
                         print(f"成功获取 {city}, {isp} 的 IP 地址！")
+                        print(f"可用 IP 地址：{urls}")
                 else:
                     print(f"城市 {city}, 运营商 {isp} 查询失败，状态码：{response.status_code}")
             except requests.exceptions.RequestException as e:
