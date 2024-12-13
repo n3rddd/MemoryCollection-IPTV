@@ -299,9 +299,9 @@ def test_download_speed(ip_list):
     return filtered_channels
 
 if __name__ == "__main__":
+    
     token_360 = os.getenv("token_360")
 
-    token_360 = "3f390adb-29e2-4b38-bd9f-3d07b3636552"
     if not token_360:
         print("未设置：token_360，程序无法执行")
         exit()
