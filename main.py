@@ -14,6 +14,7 @@ with open('data/config.json', 'r', encoding='utf-8') as json_file:
 ISP_LIST = config['ISP_LIST'] # 运营商列表
 CITY_LIST = config['CITY_LIST'] # 城市列表
 MIN_DOWNLOAD_SPEED = config['MIN_DOWNLOAD_SPEED'] # 最小下载速度
+ip_get_num = config['ip_get_num'] # 每次搜索ip获取数量
 
 def should_run():
     """判断是否需要运行程序"""
@@ -76,8 +77,9 @@ def merge_and_deduplicate(json1, json2):
         merged_json[key] = list(set(list1 + list2))
     return merged_json
 
-def get_ip(token, size=10):
+def get_ip(token):
     """根据城市和运营商信息，从 API 获取对应 IP 和端口"""
+    # size 每次搜索获取ip数量
 
     result_data = {}
     headers = {
@@ -92,7 +94,7 @@ def get_ip(token, size=10):
             data = {
                 "query": query,
                 "start": 0,
-                "size": size,
+                "size": ip_get_num,
                 "ignore_cache": False,
                 "latest": True,
                 "shortcuts": ["610ce2adb1a2e3e1632e67b1"]
@@ -331,7 +333,7 @@ def main():
     if not token_360:
         print("未设置：token_360，程序无法执行")
         return True
-
+    #  should_run() 判断上次爬取是否超过24小时，不需要的可以删除if语句
     if should_run():
         update_run_time()
         ip_list = get_ip(token_360)
