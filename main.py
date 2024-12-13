@@ -7,22 +7,22 @@ from datetime import datetime, timedelta
 import threading
 import requests
 import aiohttp
-from github import Github
 
-with open('data/config.json', 'r', encoding='utf-8') as json_file:
-    config = json.load(json_file)
-ISP_LIST = config['ISP_LIST'] # 运营商列表
-CITY_LIST = config['CITY_LIST'] # 城市列表
-MIN_DOWNLOAD_SPEED = config['MIN_DOWNLOAD_SPEED'] # 最小下载速度
-ip_get_num = config['ip_get_num'] # 每次搜索ip获取数量
+# 加载配置文件
+with open('data/config.json', 'r', encoding='utf-8') as config_file:
+    config = json.load(config_file)
+ISP_LIST = config['ISP_LIST']  # 运营商列表
+CITY_LIST = config['CITY_LIST']  # 城市列表
+MIN_DOWNLOAD_SPEED = config['MIN_DOWNLOAD_SPEED']  # 最小下载速度
+IP_FETCH_COUNT = config['ip_get_num']  # 每次搜索IP获取数量
 
 def should_run():
     """判断是否需要运行程序"""
     if not os.path.exists("data/config.json"):
         return True
 
-    with open("data/config.json", 'r', encoding='utf-8') as json_file:
-        config = json.load(json_file)
+    with open("data/config.json", 'r', encoding='utf-8') as config_file:
+        config = json.load(config_file)
         last_run_time_str = config.get('last_run_time', '')
         last_run_time = datetime.strptime(last_run_time_str, '%Y-%m-%d %H:%M:%S') if last_run_time_str else datetime.min
         current_time = datetime.now()
@@ -31,12 +31,12 @@ def should_run():
 
 def update_run_time():
     """更新上次运行时间"""
-    with open("data/config.json", 'r+', encoding='utf-8') as json_file:
-        config = json.load(json_file)
+    with open("data/config.json", 'r+', encoding='utf-8') as config_file:
+        config = json.load(config_file)
         config['last_run_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        json_file.seek(0)
-        json.dump(config, json_file, ensure_ascii=False, indent=4)
-        json_file.truncate()
+        config_file.seek(0)
+        json.dump(config, config_file, ensure_ascii=False, indent=4)
+        config_file.truncate()
 
 def read_file(file_path):
     """读取文件内容"""
@@ -77,10 +77,8 @@ def merge_and_deduplicate(json1, json2):
         merged_json[key] = list(set(list1 + list2))
     return merged_json
 
-def get_ip(token):
+def fetch_ips(token):
     """根据城市和运营商信息，从 API 获取对应 IP 和端口"""
-    # size 每次搜索获取ip数量
-
     result_data = {}
     headers = {
         "X-QuakeToken": token,
@@ -94,7 +92,7 @@ def get_ip(token):
             data = {
                 "query": query,
                 "start": 0,
-                "size": ip_get_num,
+                "size": IP_FETCH_COUNT,
                 "ignore_cache": False,
                 "latest": True,
                 "shortcuts": ["610ce2adb1a2e3e1632e67b1"]
@@ -119,11 +117,11 @@ def get_ip(token):
                     print(f"城市 {city}, 运营商 {isp} 查询失败，状态码：{response.status_code}")
             except requests.exceptions.RequestException as e:
                 print(f"查询城市 {city}, 运营商 {isp} 时出错：{e}")
-            time.sleep(3)       
+            time.sleep(3)
 
     return result_data
 
-async def test_and_get_ip_info(province_ips):
+async def test_and_get_working_ips(province_ips):
     """测试 UDPxy 代理是否可用，仅返回可用 IP 的省份信息"""
     print("测试 UDPxy 代理（异步）")
 
@@ -172,15 +170,15 @@ def process_ip_list(ip_list):
 
     return output_data
 
-def natural_key(string_):
+def natural_sort_key(string_):
     """将字符串转换为自然排序的 key"""
     return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', string_)]
 
 def group_and_sort_channels(channel_data):
     """根据规则分组并排序频道信息"""
     groups = {
-        '央视频道': [],
-        '卫视频道': [],
+        '中央频道': [],
+        '卫星频道': [],
         '其他频道': [],
         '未分组': []
     }
@@ -201,17 +199,17 @@ def group_and_sort_channels(channel_data):
                 continue
 
             if 'cctv' in name.lower():
-                groups['央视频道'].append((name, url, speed))
+                groups['中央频道'].append((name, url, speed))
             elif '卫视' in name or '凤凰' in name:
-                groups['卫视频道'].append((name, url, speed))
+                groups['卫星频道'].append((name, url, speed))
             else:
                 groups['其他频道'].append((name, url, speed))
 
     for group_name, group in groups.items():
-        if group_name == '央视频道':
-            group.sort(key=lambda x: (natural_key(x[0]), -x[2] if x[2] is not None else float('-inf')))
+        if group_name == '中央频道':
+            group.sort(key=lambda x: (natural_sort_key(x[0]), -x[2] if x[2] is not None else float('-inf')))
         else:
-            group.sort(key=lambda x: (len(x[0]), natural_key(x[0]), -x[2] if x[2] is not None else float('-inf')))
+            group.sort(key=lambda x: (len(x[0]), natural_sort_key(x[0]), -x[2] if x[2] is not None else float('-inf')))
 
     with open("itvlist.txt", 'w', encoding='utf-8') as file:
         for group_name, channel_list in groups.items():
@@ -228,7 +226,7 @@ def group_and_sort_channels(channel_data):
     print("分组后的频道信息已保存到 itvlist.txt ")
     return groups
 
-def download_speed_test(ip_list):
+def test_download_speed(ip_list):
     """测试下载速度并返回可用 IP 列表"""
 
     def download_file(url):
@@ -273,7 +271,7 @@ def download_speed_test(ip_list):
         with lock:
             results[ip] = updated_channels
             progress[0] += 1
-            print(f"Progress: {progress[0]} / {len(ip_list)}")
+            print(f"进度: {progress[0]} / {len(ip_list)}")
 
     threads = []
     for ip, channels in ip_list.items():
@@ -300,56 +298,22 @@ def download_speed_test(ip_list):
 
     return filtered_channels
 
-def upload_file_to_github(token, repo_name, file_path, folder='', branch='main'):
-    """将结果上传到 GitHub"""
-    g = Github(token)
-    repo = g.get_user().get_repo(repo_name)
-    with open(file_path, 'r', encoding='utf-8') as file:
-        content = file.read()
-
-    git_path = f"{folder}/{file_path.split('/')[-1]}" if folder else file_path.split('/')[-1]
-
-    try:
-        contents = repo.get_contents(git_path, ref=branch)
-    except:
-        contents = None
-
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    try:
-        if contents:
-            repo.update_file(contents.path, current_time, content, contents.sha, branch=branch)
-            print("文件已更新")
-        else:
-            repo.create_file(git_path, current_time, content, branch=branch)
-            print("文件已创建")
-    except Exception as e:
-        print("文件上传失败:", e)
-
-def main():
-
+if __name__ == "__main__":
     token_360 = os.getenv("token_360")
 
+    token_360 = "3f390adb-29e2-4b38-bd9f-3d07b3636552"
     if not token_360:
         print("未设置：token_360，程序无法执行")
-        return True
-    #  should_run() 判断上次爬取是否超过24小时，不需要的可以删除if语句
+        exit()
+
     if should_run():
         update_run_time()
-        ip_list = get_ip(token_360)
+        ip_list = fetch_ips(token_360)
         ip_list = merge_and_deduplicate(ip_list, read_json_file("data/iplist.json"))
     else:
         ip_list = read_json_file("data/iplist.json")
-    ip_list = asyncio.run(test_and_get_ip_info(ip_list))
+    ip_list = asyncio.run(test_and_get_working_ips(ip_list))
     write_json_file("data/iplist.json", ip_list)
     ip_list = process_ip_list(ip_list)
-    ip_list = download_speed_test(ip_list)
+    ip_list = test_download_speed(ip_list)
     group_and_sort_channels(ip_list)
-
-    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-    if GITHUB_TOKEN:
-        upload_file_to_github(GITHUB_TOKEN, "IPTV", "itvlist.txt")
-
-if __name__ == "__main__":
-    main()
-    
