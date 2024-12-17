@@ -211,7 +211,7 @@ def group_and_sort_channels(channel_data):
         else:
             group.sort(key=lambda x: (len(x[0]), natural_sort_key(x[0]), -x[2] if x[2] is not None else float('-inf')))
 
-    with open("itvlist.txt", 'w', encoding='utf-8') as file:
+    with open("multicast.txt", 'w', encoding='utf-8') as file:
         for group_name, channel_list in groups.items():
             file.write(f"{group_name},#genre#\n")
             for name, url, speed in channel_list:
@@ -223,7 +223,7 @@ def group_and_sort_channels(channel_data):
 
         file.write(f"{new_time_str},#genre#:\n{new_time_str},https://raw.gitmirror.com/MemoryCollection/IPTV/main/TB/mv.mp4\n")
 
-    print("分组后的频道信息已保存到 itvlist.txt ")
+    print("分组后的频道信息已保存到 multicast.txt ")
     return groups
 
 def test_download_speed(ip_list):
@@ -293,15 +293,14 @@ def test_download_speed(ip_list):
                 filtered_channels.append(channel)
 
     os.makedirs("data", exist_ok=True)
-    with open("data/itv.txt", "w", encoding="utf-8") as file:
+    with open("data/multicast_itv.txt", "w", encoding="utf-8") as file:
         file.write("\n".join(filtered_channels))
 
     return filtered_channels
 
 if __name__ == "__main__":
-    
-    token_360 = os.getenv("token_360")
 
+    token_360 = os.getenv("token_360")
     if not token_360:
         print("未设置：token_360，程序无法执行")
         exit()
@@ -309,11 +308,11 @@ if __name__ == "__main__":
     if should_run():
         update_run_time()
         ip_list = fetch_ips(token_360)
-        ip_list = merge_and_deduplicate(ip_list, read_json_file("data/iplist.json"))
+        ip_list = merge_and_deduplicate(ip_list, read_json_file("data/multicast.json"))
     else:
-        ip_list = read_json_file("data/iplist.json")
+        ip_list = read_json_file("data/multicast.json")
     ip_list = asyncio.run(test_and_get_working_ips(ip_list))
-    write_json_file("data/iplist.json", ip_list)
+    write_json_file("data/multicast.json", ip_list)
     ip_list = process_ip_list(ip_list)
     ip_list = test_download_speed(ip_list)
     group_and_sort_channels(ip_list)
