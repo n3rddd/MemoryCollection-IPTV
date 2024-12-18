@@ -1,5 +1,4 @@
 import re
-import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import requests
@@ -14,6 +13,7 @@ import os
 # 获取酒店ip  钟馗之眼
 def fetch_ips_sele(urls):
     """获取酒店ip"""
+    print("开始获取酒店ip")
     # 配置 ChromeDriver 的选项
     chrome_options = Options()
     chrome_options.add_argument("--headless")  # 无头模式
@@ -107,6 +107,7 @@ def fetch_ips_sele(urls):
 # 获取酒店ip  360搜索
 def fetch_ips_360(token):
     """360搜索ip"""
+    print("360搜索IP")
     headers = {
         "X-QuakeToken": token,
         "Content-Type": "application/json"
@@ -138,13 +139,13 @@ def fetch_ips_360(token):
             pass
     except requests.exceptions.RequestException as e:
         pass
-
+    print(f"提取到 {len(urls)} 个 IP:端口")
     return urls
 
 # 合并 js ip列表
 def merge_ips(ips):
     """
-    将传入的 IP 列表与 `data/itv.json` 文件中的 IP 列表合并并去重。
+    将传入的 IP 列表与 `data/hotel.json` 文件中的 IP 列表合并并去重。
 
     Args:
         ips (list): 传入的 IP 列表。
@@ -152,9 +153,9 @@ def merge_ips(ips):
     Returns:
         list: 合并去重后的 IP 列表。
     """
-    # 读取 `data/itv.json` 文件
+    # 读取 `data/hotel.json` 文件
     try:
-        with open("data/itv.json", "r", encoding="utf-8") as file:
+        with open("data/hotel.json", "r", encoding="utf-8") as file:
             data = json.load(file)
             file_ips = data.get("ip", [])
     except FileNotFoundError:
@@ -339,9 +340,6 @@ def process_tv_list(tv_list):
             except Exception as e:
                 print(f"处理 IP {ip} 时发生错误: {e}")
 
-    # 将结果写入文件
-    with open("data/hotel_tv.txt", "w", encoding="utf-8") as f:
-        f.write("\n".join(results))
     return results    
 
 # 自然排序
@@ -415,19 +413,14 @@ def write_channels_to_json(channel_data):
 # 主程序入口
 def main():
 
-    urls = ["https://www.zoomeye.org/searchResult?q=iconhash%3A%226e6e3db0140929429db13ed41a2449cb%22" ]
+    urls = ["https://www.zoomeye.org/searchResult?q=iconhash%3A%226e6e3db0140929429db13ed41a2449cb%22%20%20-title%3A%22404%22"]
   
     token_360 = os.getenv("token_360")
     ips = list(set(fetch_ips_360(token_360) + fetch_ips_sele(urls)))
-    print(f"共找到 {len(ips)} 个 IP")
     print(ips)
     tv_list = get_channels_from_ips(merge_ips(ips))
     write_channels_to_json(tv_list)
-
     channel_data= process_tv_list(tv_list["data"])
-
-
-
     group_and_sort_channels(channel_data)
 
 # 运行主程序

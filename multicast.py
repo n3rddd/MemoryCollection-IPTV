@@ -293,8 +293,6 @@ def test_download_speed(ip_list):
                 filtered_channels.append(channel)
 
     os.makedirs("data", exist_ok=True)
-    with open("data/multicast_itv.txt", "w", encoding="utf-8") as file:
-        file.write("\n".join(filtered_channels))
 
     return filtered_channels
 
