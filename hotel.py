@@ -16,7 +16,7 @@ def fetch_ips_sele(urls):
     print("开始获取酒店ip")
     # 配置 ChromeDriver 的选项
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # 无头模式
+
     chrome_options.add_argument("--disable-gpu")  # 修复无头模式问题
     chrome_options.add_argument("--no-sandbox")  # 适配 Linux
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
@@ -416,6 +416,8 @@ def main():
     urls = ["https://www.zoomeye.org/searchResult?q=iconhash%3A%226e6e3db0140929429db13ed41a2449cb%22%20%20-title%3A%22404%22"]
   
     token_360 = os.getenv("token_360")
+    print(token_360)
+    exit(0)
     ips = list(set(fetch_ips_360(token_360) + fetch_ips_sele(urls)))
     print(ips)
     tv_list = get_channels_from_ips(merge_ips(ips))
