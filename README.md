@@ -8,22 +8,14 @@
 邀请码：VfsXyg  赠送5000积分
 
 
+### 酒店源
 
+大家优先使用hotel吧，组播的那个最近几个月播放效果非常差
 
-不知道怎么找组播地址的，可以参考这个截图，自己手工替换下，我只截取了北京河北辽宁的。
+### 组播源
 
 http://www.foodieguide.com/iptvsearch/hotellist.html
 
 
 [![](https://github.com/MemoryCollection/IPTV/blob/api/api/TB/multicastsearch.png)](https://github.com/MemoryCollection/IPTV/blob/api/api/TB/multicastsearch.png)
 
-
-### 电视直播
-
-    https://raw.gitmirror.com/MemoryCollection/IPTV/main/multicast.txt
-
-
-### 壳子
-
-- FongMi  https://tv.xn--yhqu5zs87a.top/
-- 影视仓 https://wwqo.lanzouo.com/iTW1629kktlc 密码:4ofa

@@ -1,7 +1,3 @@
 requests
-PyGithub
-beautifulsoup4
-selenium
-aiohttp
-playwright
 m3u8
+aiohttp
